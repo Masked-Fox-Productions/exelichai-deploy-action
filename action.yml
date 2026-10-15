@@ -1,0 +1,91 @@
+# The exelichai composite Action (plan 2026-10-05-001 Unit 15).
+#
+# Validates a pull request, syncs a push to the draft branch into the game's
+# draft, and publishes a push to the publish branch. The Action does not pick
+# the lane: it signs in with GitHub Actions OIDC and the server grants the
+# scope the run is entitled to (push draft -> author, push publish -> publish,
+# anything else -> validate). Publishing is OIDC-only.
+#
+# Hardening:
+# * inputs reach the scripts only through `env:` -- never `${{ inputs.* }}`
+#   interpolated into a shell line;
+# * dependencies are hash-locked (requirements.lock: --require-hashes,
+#   --only-binary, --no-deps); the CLI is the package beside this file in the
+#   same pinned commit, run with `python -I` so nothing in the workspace can
+#   shadow it;
+# * the CLI talks only to allowlisted API origins and masks every minted value;
+# * a `pull_request_target` run is refused (it would run a fork's tree with the
+#   base repository's credentials);
+# * there is no skip step: the workflow's `paths:` filter decides when to run,
+#   and the server skips an unchanged tree itself.
+#
+# Keep the input names in step with the GitHub panel's generated workflow
+# (exelichai_web/src/components/studio/github/workflowSnippet.ts); a contract
+# test (exelichai_cli/tests/test_action_contract.py) holds them equal.
+name: "Exelichai sync"
+description: "Validate, sync the draft of, or publish an Exelichai game from this repository."
+author: "Masked Fox Productions"
+branding:
+  icon: "upload-cloud"
+  color: "purple"
+
+inputs:
+  game-id:
+    description: "The connected game's id (the GitHub panel shows it)."
+    required: true
+  folder:
+    description: "The repository folder holding exelichai.yaml (`.` for the root)."
+    required: false
+    default: "."
+  api-url:
+    description: "The Exelichai API origin; also the OIDC audience."
+    required: false
+    default: "https://api.exelichai.com"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Refuse pull_request_target
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        if [ "$EVENT_NAME" = "pull_request_target" ]; then
+          echo "::error title=pull_request_target::The exelichai Action never runs on pull_request_target (it would check a fork's tree with this repository's credentials). Use pull_request."
+          exit 1
+        fi
+
+    - name: Install the exelichai CLI's locked dependencies
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        venv="$RUNNER_TEMP/exelichai-venv"
+        python3 -m venv "$venv"
+        "$venv/bin/python" -m pip install --disable-pip-version-check --no-input --quiet \
+          --require-hashes --only-binary ':all:' --no-deps \
+          -r "$ACTION_PATH/requirements.lock"
+
+    - name: Sync with Exelichai
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        EXELICHAI_GAME_ID: ${{ inputs.game-id }}
+        EXELICHAI_FOLDER: ${{ inputs.folder }}
+        EXELICHAI_API_URL: ${{ inputs.api-url }}
+      run: |
+        set -euo pipefail
+        # The released Action carries the package beside action.yml; inside the
+        # monorepo it sits one level up (exelichai_cli/exelichai_cli).
+        if [ -f "$ACTION_PATH/exelichai_cli/__main__.py" ]; then
+          pkg_root="$ACTION_PATH"
+        elif [ -f "$ACTION_PATH/../exelichai_cli/__main__.py" ]; then
+          pkg_root="$ACTION_PATH/.."
+        else
+          echo "::error::the exelichai_cli package is missing from the Action"
+          exit 1
+        fi
+        "$RUNNER_TEMP/exelichai-venv/bin/python" -I -c \
+          'import sys; sys.path.insert(0, sys.argv[1]); from exelichai_cli.__main__ import main; sys.exit(main(["ci"]))' \
+          "$pkg_root"

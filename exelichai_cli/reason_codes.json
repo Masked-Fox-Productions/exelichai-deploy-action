@@ -1,0 +1,751 @@
+{
+  "codes": [
+    {
+      "anchor": "already-connected",
+      "code": "already-connected",
+      "message": "This game is already connected. Edit the binding, or disconnect first."
+    },
+    {
+      "anchor": "already-initialised",
+      "code": "already-initialised",
+      "message": "This game is already initialised. Use `exelichai pull` for the presentation; only the owner may re-initialise, and only with an explicit confirm."
+    },
+    {
+      "anchor": "api-origin-refused",
+      "code": "api-origin-refused",
+      "message": "The API URL is not an Exelichai API origin this tool will send credentials to."
+    },
+    {
+      "anchor": "api-unreachable",
+      "code": "api-unreachable",
+      "message": "The Exelichai API could not be reached, or answered with something unexpected. Try again."
+    },
+    {
+      "anchor": "archive-invalid",
+      "code": "archive-invalid",
+      "message": "The downloaded export does not match its manifest (size, sha256 or file list). Nothing was written; run the command again."
+    },
+    {
+      "anchor": "binding-displaced",
+      "code": "binding-displaced",
+      "message": "The repository's real owner proved control of this folder, so this binding no longer holds it."
+    },
+    {
+      "anchor": "binding-epoch-stale",
+      "code": "binding-epoch-stale",
+      "message": "The connection changed (connected, edited or disconnected) after this credential or job was issued."
+    },
+    {
+      "anchor": "binding-invalid",
+      "code": "binding-invalid",
+      "message": "The connection request is malformed."
+    },
+    {
+      "anchor": "binding-owner-changed",
+      "code": "binding-owner-changed",
+      "message": "The game's owner changed after it was connected."
+    },
+    {
+      "anchor": "binding-repo-mismatch",
+      "code": "binding-repo-mismatch",
+      "message": "The signed-in run came from a different repository than the binding names."
+    },
+    {
+      "anchor": "binding-unverified",
+      "code": "binding-unverified",
+      "message": "The binding is unverified: no GitHub Actions run from the repository has signed in yet."
+    },
+    {
+      "anchor": "blob-expired",
+      "code": "blob-expired",
+      "message": "A file this sync needs is no longer stored (uploads expire after 30 days). Run the sync again so it uploads the file again."
+    },
+    {
+      "anchor": "blob-hash-mismatch",
+      "code": "blob-hash-mismatch",
+      "message": "A stored file's bytes do not match the sha256 it was uploaded under."
+    },
+    {
+      "anchor": "blob-wrong-game",
+      "code": "blob-wrong-game",
+      "message": "A stored file belongs to a different game."
+    },
+    {
+      "anchor": "blobs-missing",
+      "code": "blobs-missing",
+      "message": "Some files the manifest lists were not uploaded. Upload every file the manifest step asked for, then finalise again."
+    },
+    {
+      "anchor": "branch-invalid",
+      "code": "branch-invalid",
+      "message": "A branch name is not valid, or the draft and publish branches are the same."
+    },
+    {
+      "anchor": "branch-mismatch",
+      "code": "branch-mismatch",
+      "message": "The request names a branch its credential was not issued for."
+    },
+    {
+      "anchor": "conflict-keep-mine-unavailable",
+      "code": "conflict-keep-mine-unavailable",
+      "message": "This conflict can only take the repository's value: a rules or pack change, or a hide, reaches a connected game only from the repository."
+    },
+    {
+      "anchor": "conflict-not-found",
+      "code": "conflict-not-found",
+      "message": "That conflict is no longer held (a newer push or another resolution settled it). Refresh the conflict list."
+    },
+    {
+      "anchor": "conflict-resolve-failed",
+      "code": "conflict-resolve-failed",
+      "message": "The conflict could not be resolved; nothing was recorded as resolved. Try again, or push a tree that settles it."
+    },
+    {
+      "anchor": "conflict-resolve-invalid",
+      "code": "conflict-resolve-invalid",
+      "message": "The resolution must say `keep: repo` or `keep: mine`."
+    },
+    {
+      "anchor": "conflict-value-missing",
+      "code": "conflict-value-missing",
+      "message": "The repository's value for this conflict is not stored any more. Push again to record it."
+    },
+    {
+      "anchor": "conflicts-held",
+      "code": "conflicts-held",
+      "message": "The repository and the Art Studio both changed the same thing. Resolve the conflicts in the GitHub panel (or with `exelichai conflicts`) first."
+    },
+    {
+      "anchor": "connect-rate-limited",
+      "code": "connect-rate-limited",
+      "message": "Too many connection attempts. Wait a while and try again."
+    },
+    {
+      "anchor": "creator-mismatch",
+      "code": "creator-mismatch",
+      "message": "`creator:` must name the connected game's owner, or be left out (it then defaults to the owner)."
+    },
+    {
+      "anchor": "credential-expired",
+      "code": "credential-expired",
+      "message": "The credential has expired. Mint a new token, or let the workflow sign in again."
+    },
+    {
+      "anchor": "credential-invalid",
+      "code": "credential-invalid",
+      "message": "The credential is malformed, unknown, revoked or not valid."
+    },
+    {
+      "anchor": "credential-missing",
+      "code": "credential-missing",
+      "message": "No credential: set `EXELICHAI_TOKEN` to one of the game's tokens, or run inside GitHub Actions with `permissions: id-token: write`."
+    },
+    {
+      "anchor": "credential-rate-limited",
+      "code": "credential-rate-limited",
+      "message": "Too many sign-in attempts or failures. Wait a while and try again."
+    },
+    {
+      "anchor": "credential-required",
+      "code": "credential-required",
+      "message": "This operation runs from CI with a game credential, not from a signed-in browser."
+    },
+    {
+      "anchor": "credential-scope",
+      "code": "credential-scope",
+      "message": "This credential's scope does not allow this operation."
+    },
+    {
+      "anchor": "credential-wrong-game",
+      "code": "credential-wrong-game",
+      "message": "This credential belongs to a different game."
+    },
+    {
+      "anchor": "credentials-unavailable",
+      "code": "credentials-unavailable",
+      "message": "Game credentials are not configured on this stage."
+    },
+    {
+      "anchor": "deployment-expired",
+      "code": "deployment-expired",
+      "message": "That deployment is older than the last 20, so what it served may already have been cleaned up. Roll back to a newer one, or push the commit again."
+    },
+    {
+      "anchor": "deployment-not-found",
+      "code": "deployment-not-found",
+      "message": "That deployment is not one of this game's (or the game has no main deployment to restore)."
+    },
+    {
+      "anchor": "deployment-unavailable",
+      "code": "deployment-unavailable",
+      "message": "That deployment's published snapshot can no longer be read, so it cannot be served again."
+    },
+    {
+      "anchor": "develop-not-restorable",
+      "code": "develop-not-restorable",
+      "message": "The draft branch's last synced tree would not re-apply to the draft after a publish, so nothing was published. Push the draft branch again (or fix what the detail names), then retry."
+    },
+    {
+      "anchor": "develop-not-retained",
+      "code": "develop-not-retained",
+      "message": "The draft branch's last synced tree cannot be read back, so a publish could not restore the draft afterwards. Push the draft branch again, then retry."
+    },
+    {
+      "anchor": "draft-import-failed",
+      "code": "draft-import-failed",
+      "message": "Part of the draft import failed, so nothing was recorded as synced. The next push (or a re-run) retries it."
+    },
+    {
+      "anchor": "draft-not-restored",
+      "code": "draft-not-restored",
+      "message": "The publish finished, but the draft could not be put back to the draft branch afterwards, so it still shows the publish branch. Push the draft branch again to restore it."
+    },
+    {
+      "anchor": "environment-invalid",
+      "code": "environment-invalid",
+      "message": "The GitHub Environment name is not valid."
+    },
+    {
+      "anchor": "environment-required",
+      "code": "environment-required",
+      "message": "A publish run must use the GitHub Environment the binding names. Add `environment:` to the publish job."
+    },
+    {
+      "anchor": "exchange-invalid",
+      "code": "exchange-invalid",
+      "message": "The OIDC sign-in request is malformed (it needs `game_id` and `id_token`)."
+    },
+    {
+      "anchor": "export-failed",
+      "code": "export-failed",
+      "message": "The export could not be stored. Try again."
+    },
+    {
+      "anchor": "export-invalid",
+      "code": "export-invalid",
+      "message": "The export request is malformed (`scope`, `reinitialise`)."
+    },
+    {
+      "anchor": "export-media-missing",
+      "code": "export-media-missing",
+      "message": "A media file the game uses could not be read for the export."
+    },
+    {
+      "anchor": "export-meta-dropped",
+      "code": "export-meta-dropped",
+      "message": "The game carries a setting the repository format cannot hold yet, so the export refuses rather than lose it."
+    },
+    {
+      "anchor": "export-meta-unknown",
+      "code": "export-meta-unknown",
+      "message": "The game carries a setting the export does not know, so it refuses rather than leave it out of the repository."
+    },
+    {
+      "anchor": "export-orphan-delta",
+      "code": "export-orphan-delta",
+      "message": "A transaction label or other presentation change names a transaction this game neither owns nor inherits."
+    },
+    {
+      "anchor": "export-presentation-dropped",
+      "code": "export-presentation-dropped",
+      "message": "An Art Studio entity or cell could not be exported, so the export refuses rather than leave it out."
+    },
+    {
+      "anchor": "export-reserved-key",
+      "code": "export-reserved-key",
+      "message": "The game carries a platform-decided setting a repository may not hold (for example a custom client bundle)."
+    },
+    {
+      "anchor": "family-unproven",
+      "code": "family-unproven",
+      "message": "This game's base family has not passed the repo round-trip proof yet, so it cannot sync."
+    },
+    {
+      "anchor": "finalise-invalid",
+      "code": "finalise-invalid",
+      "message": "The finalise request is malformed (message, author, branch or sha)."
+    },
+    {
+      "anchor": "folder-invalid",
+      "code": "folder-invalid",
+      "message": "The folder is not a safe path inside the repository."
+    },
+    {
+      "anchor": "folder-not-empty",
+      "code": "folder-not-empty",
+      "message": "The folder already holds a repo tree. `exelichai init --force` replaces it, after showing what would change."
+    },
+    {
+      "anchor": "folder-overlap",
+      "code": "folder-overlap",
+      "message": "This folder is inside, or contains, a folder another game is bound to in the same repository."
+    },
+    {
+      "anchor": "folder-taken",
+      "code": "folder-taken",
+      "message": "Another game is already bound to this folder of this repository."
+    },
+    {
+      "anchor": "format-unsupported",
+      "code": "format-unsupported",
+      "message": "`exelichai.yaml` declares a format this server does not read."
+    },
+    {
+      "anchor": "gh-unavailable",
+      "code": "gh-unavailable",
+      "message": "The GitHub CLI (`gh`) is not installed or not signed in. Install it and run `gh auth login`, or copy the repository's ids from GitHub yourself."
+    },
+    {
+      "anchor": "job-cancelled",
+      "code": "job-cancelled",
+      "message": "The sync job was cancelled (the game was disconnected or the binding changed)."
+    },
+    {
+      "anchor": "job-expired",
+      "code": "job-expired",
+      "message": "The sync job stopped without finishing (its worker timed out or crashed). Run the sync again."
+    },
+    {
+      "anchor": "job-not-found",
+      "code": "job-not-found",
+      "message": "No such sync job on this game."
+    },
+    {
+      "anchor": "job-timeout",
+      "code": "job-timeout",
+      "message": "The sync job did not finish in time. It may still be running: check it with `exelichai status <job id>`."
+    },
+    {
+      "anchor": "lane-mismatch",
+      "code": "lane-mismatch",
+      "message": "The request names a lane its credential does not run."
+    },
+    {
+      "anchor": "lane-not-implemented",
+      "code": "lane-not-implemented",
+      "message": "This kind of sync is not available on this server yet."
+    },
+    {
+      "anchor": "lease-lost",
+      "code": "lease-lost",
+      "message": "The sync job lost its hold on the game (it ran past its time limit), so it stopped before writing anything more."
+    },
+    {
+      "anchor": "manifest-invalid",
+      "code": "manifest-invalid",
+      "message": "`exelichai.yaml` is malformed."
+    },
+    {
+      "anchor": "manifest-missing",
+      "code": "manifest-missing",
+      "message": "The folder has no `exelichai.yaml` manifest."
+    },
+    {
+      "anchor": "mass-retire",
+      "code": "mass-retire",
+      "message": "This push would remove more than half of the Art Studio content this branch last synced. If that is intended, push again with `--allow-mass-retire`."
+    },
+    {
+      "anchor": "media-image-too-large",
+      "code": "media-image-too-large",
+      "message": "An image's pixel dimensions are over the limit."
+    },
+    {
+      "anchor": "media-ref-missing",
+      "code": "media-ref-missing",
+      "message": "A `media/` reference names a file that is not in the tree."
+    },
+    {
+      "anchor": "media-too-large",
+      "code": "media-too-large",
+      "message": "A media file is larger than the per-file limit."
+    },
+    {
+      "anchor": "media-type-mismatch",
+      "code": "media-type-mismatch",
+      "message": "A media file's contents do not match its extension."
+    },
+    {
+      "anchor": "meta-reserved",
+      "code": "meta-reserved",
+      "message": "This key is set by the platform, not by the repository."
+    },
+    {
+      "anchor": "not-connected",
+      "code": "not-connected",
+      "message": "This game is not connected to GitHub."
+    },
+    {
+      "anchor": "not-initialised",
+      "code": "not-initialised",
+      "message": "This game has not been initialised for GitHub sync. Run `exelichai init` (the initial export) first."
+    },
+    {
+      "anchor": "not-owner",
+      "code": "not-owner",
+      "message": "Only the game's owner may manage its GitHub connection."
+    },
+    {
+      "anchor": "oidc-expired",
+      "code": "oidc-expired",
+      "message": "The GitHub Actions OIDC token has expired."
+    },
+    {
+      "anchor": "oidc-invalid",
+      "code": "oidc-invalid",
+      "message": "The GitHub Actions OIDC token is not valid (signature, algorithm, issuer, audience or claims)."
+    },
+    {
+      "anchor": "oidc-key-unknown",
+      "code": "oidc-key-unknown",
+      "message": "The GitHub Actions OIDC token is signed with a key GitHub does not publish."
+    },
+    {
+      "anchor": "oidc-not-granted",
+      "code": "oidc-not-granted",
+      "message": "This run cannot sign in: GitHub gave it no OIDC token. Pull requests from forks are not checked (GitHub withholds OIDC from them); otherwise add `permissions: id-token: write` to the workflow."
+    },
+    {
+      "anchor": "oidc-unavailable",
+      "code": "oidc-unavailable",
+      "message": "GitHub's OIDC signing keys could not be fetched. Try again."
+    },
+    {
+      "anchor": "oidc-workflow-mismatch",
+      "code": "oidc-workflow-mismatch",
+      "message": "The run's workflow is not the one the binding names, or its `@ref` disagrees with the run's ref."
+    },
+    {
+      "anchor": "owner-mismatch",
+      "code": "owner-mismatch",
+      "message": "`owner:` must name the connected game's owner, or be left out (it then defaults to the owner)."
+    },
+    {
+      "anchor": "pack-pin-invalid",
+      "code": "pack-pin-invalid",
+      "message": "A pack pin in `exelichai.yaml` is malformed."
+    },
+    {
+      "anchor": "packs-edited-in-github",
+      "code": "packs-edited-in-github",
+      "message": "This game is connected to GitHub, so its packs are set in the repository: edit the `packs:` pins in `exelichai.yaml` (install, update or remove a pack there) and push."
+    },
+    {
+      "anchor": "path-case-collision",
+      "code": "path-case-collision",
+      "message": "Two paths differ only by letter case."
+    },
+    {
+      "anchor": "path-extension",
+      "code": "path-extension",
+      "message": "A file has an extension the tree may not carry."
+    },
+    {
+      "anchor": "path-nested-archive",
+      "code": "path-nested-archive",
+      "message": "The tree contains an archive file."
+    },
+    {
+      "anchor": "path-symlink",
+      "code": "path-symlink",
+      "message": "The tree contains a symbolic link."
+    },
+    {
+      "anchor": "path-unsafe",
+      "code": "path-unsafe",
+      "message": "A path escapes the folder or uses a forbidden character."
+    },
+    {
+      "anchor": "presentation-dirty",
+      "code": "presentation-dirty",
+      "message": "`presentation/` has uncommitted changes. Commit or stash them first, or pass `--force` to overwrite them."
+    },
+    {
+      "anchor": "presentation-duplicate",
+      "code": "presentation-duplicate",
+      "message": "Two presentation entries address the same entity or cell."
+    },
+    {
+      "anchor": "presentation-invalid",
+      "code": "presentation-invalid",
+      "message": "A presentation file is malformed or misplaced."
+    },
+    {
+      "anchor": "presentation-missing",
+      "code": "presentation-missing",
+      "message": "The tree has no `presentation/` folder."
+    },
+    {
+      "anchor": "presentation-refused",
+      "code": "presentation-refused",
+      "message": "A presentation file failed the import's validation."
+    },
+    {
+      "anchor": "publish-failed",
+      "code": "publish-failed",
+      "message": "The publish of the publish branch failed. What players see is unchanged and the draft was restored; fix the cause and push again."
+    },
+    {
+      "anchor": "publish-in-progress",
+      "code": "publish-in-progress",
+      "message": "A publish from GitHub is in progress, so Studio edits are paused until it finishes."
+    },
+    {
+      "anchor": "publish-oidc-only",
+      "code": "publish-oidc-only",
+      "message": "Publishing runs only from the GitHub Actions publish job, signed in with OIDC. No token can publish, and nothing publishes from a laptop: merge to the publish branch."
+    },
+    {
+      "anchor": "publish-partial",
+      "code": "publish-partial",
+      "message": "The publish branch is live, but a catalog surface did not refresh. Push again (or re-run the workflow) to refresh it."
+    },
+    {
+      "anchor": "published-from-github",
+      "code": "published-from-github",
+      "message": "This game is connected to GitHub, so it is published from the repository: push to the publish branch to publish. Studio Publish is off while it is connected."
+    },
+    {
+      "anchor": "ref-inaccessible",
+      "code": "ref-inaccessible",
+      "message": "A referenced game or pack is not available to this game's owner: it must be theirs, shared with them, a platform module, or published to the Asset Store."
+    },
+    {
+      "anchor": "ref-out-of-chain",
+      "code": "ref-out-of-chain",
+      "message": "A reference names another game's files, and that game is not one this game inherits from, imports or installs."
+    },
+    {
+      "anchor": "ref-unknown",
+      "code": "ref-unknown",
+      "message": "A referenced game or pack does not exist on this server."
+    },
+    {
+      "anchor": "repo-id-invalid",
+      "code": "repo-id-invalid",
+      "message": "A repository or owner id must be a positive whole number."
+    },
+    {
+      "anchor": "repo-lookup-failed",
+      "code": "repo-lookup-failed",
+      "message": "GitHub could not be reached to look the repository up. Try again."
+    },
+    {
+      "anchor": "repo-name-invalid",
+      "code": "repo-name-invalid",
+      "message": "The repository owner or name is not a valid GitHub name."
+    },
+    {
+      "anchor": "repo-not-found",
+      "code": "repo-not-found",
+      "message": "GitHub has no public repository by that name. For a private repository, paste its numeric ids."
+    },
+    {
+      "anchor": "restore-owed",
+      "code": "restore-owed",
+      "message": "A publish from GitHub is still putting the draft back. Try again once it finishes."
+    },
+    {
+      "anchor": "rules-duplicate-key",
+      "code": "rules-duplicate-key",
+      "message": "Two rules files (or one, twice) define the same key."
+    },
+    {
+      "anchor": "rules-edited-in-github",
+      "code": "rules-edited-in-github",
+      "message": "This game is connected to GitHub, so its rules are edited in the repository: definitions, transaction labels, and the cover, banner, title and other listing details on its root. Change them in the repository and push."
+    },
+    {
+      "anchor": "rules-file-missing",
+      "code": "rules-file-missing",
+      "message": "A rules file listed in `exelichai.yaml` is not in the tree."
+    },
+    {
+      "anchor": "rules-game-id",
+      "code": "rules-game-id",
+      "message": "`game_id` belongs in `exelichai.yaml`, not in a rules file."
+    },
+    {
+      "anchor": "rules-invalid",
+      "code": "rules-invalid",
+      "message": "A rules file is malformed."
+    },
+    {
+      "anchor": "rules-packs",
+      "code": "rules-packs",
+      "message": "Pack pins belong in `exelichai.yaml`, not in a rules file."
+    },
+    {
+      "anchor": "rules-refused",
+      "code": "rules-refused",
+      "message": "The rules failed the import's validation."
+    },
+    {
+      "anchor": "run-stale",
+      "code": "run-stale",
+      "message": "An older workflow run arrived after a newer run of the same workflow on this branch had already synced, so it was not applied."
+    },
+    {
+      "anchor": "run-superseded",
+      "code": "run-superseded",
+      "message": "A newer run of the same workflow on this branch arrived while this one was waiting, so only the newer one is applied."
+    },
+    {
+      "anchor": "sandbox-game",
+      "code": "sandbox-game",
+      "message": "A personal sandbox cannot be connected to GitHub."
+    },
+    {
+      "anchor": "scene-key-unknown",
+      "code": "scene-key-unknown",
+      "message": "A scene carries a key the scene storage does not keep, so saving it would silently drop that key. Remove it or rename it to a key scenes support."
+    },
+    {
+      "anchor": "seed-game",
+      "code": "seed-game",
+      "message": "A game seeded from the platform's own repository cannot be connected to GitHub."
+    },
+    {
+      "anchor": "sha-mismatch",
+      "code": "sha-mismatch",
+      "message": "The request names a commit its credential was not issued for."
+    },
+    {
+      "anchor": "swap-interrupted",
+      "code": "swap-interrupted",
+      "message": "The publish stopped before it went live (the worker was interrupted or the main import failed). The draft was restored; re-run the workflow."
+    },
+    {
+      "anchor": "sync-busy",
+      "code": "sync-busy",
+      "message": "Another sync operation holds this game. Try again when it finishes."
+    },
+    {
+      "anchor": "sync-concurrency",
+      "code": "sync-concurrency",
+      "message": "This game already has the maximum number of deploy syncs queued or running. Wait for one to finish."
+    },
+    {
+      "anchor": "sync-disabled",
+      "code": "sync-disabled",
+      "message": "GitHub sync is not enabled on this stage."
+    },
+    {
+      "anchor": "sync-in-progress",
+      "code": "sync-in-progress",
+      "message": "A sync or a publish from GitHub is running on this game. Resolve the conflict when it finishes."
+    },
+    {
+      "anchor": "sync-quota",
+      "code": "sync-quota",
+      "message": "This game has started too many syncs this hour. Wait a while and try again."
+    },
+    {
+      "anchor": "system-game",
+      "code": "system-game",
+      "message": "A platform game or module cannot be connected to GitHub."
+    },
+    {
+      "anchor": "token-expiry-invalid",
+      "code": "token-expiry-invalid",
+      "message": "A token's expiry must be from 1 to 365 days."
+    },
+    {
+      "anchor": "token-label-invalid",
+      "code": "token-label-invalid",
+      "message": "A token's label is too long or holds characters that are not allowed."
+    },
+    {
+      "anchor": "token-limit",
+      "code": "token-limit",
+      "message": "This game already holds the maximum number of tokens. Revoke one first."
+    },
+    {
+      "anchor": "token-not-found",
+      "code": "token-not-found",
+      "message": "No such token on this game."
+    },
+    {
+      "anchor": "token-scope-invalid",
+      "code": "token-scope-invalid",
+      "message": "A token's scope is `validate` or `author`. Publishing is OIDC-only, so no token can publish."
+    },
+    {
+      "anchor": "tree-too-large",
+      "code": "tree-too-large",
+      "message": "The tree's total size is over the limit."
+    },
+    {
+      "anchor": "tree-too-many-files",
+      "code": "tree-too-many-files",
+      "message": "The tree holds more files than the limit."
+    },
+    {
+      "anchor": "txn-presentation-invalid",
+      "code": "txn-presentation-invalid",
+      "message": "A `transaction_presentation:` entry is malformed."
+    },
+    {
+      "anchor": "unexpected-file",
+      "code": "unexpected-file",
+      "message": "A file is not part of the repo format."
+    },
+    {
+      "anchor": "unsent-edits",
+      "code": "unsent-edits",
+      "message": "The Art Studio has edits the pushed tree does not carry. Run `exelichai pull`, commit the result and push again, so the edits are not lost."
+    },
+    {
+      "anchor": "upload-manifest-invalid",
+      "code": "upload-manifest-invalid",
+      "message": "The upload manifest is malformed. It needs `files`: a list of `{path, sha256, size}`, each path once."
+    },
+    {
+      "anchor": "upload-quota",
+      "code": "upload-quota",
+      "message": "This game has asked to upload too many files or bytes this hour. Wait a while and try again."
+    },
+    {
+      "anchor": "worker-error",
+      "code": "worker-error",
+      "message": "The sync job failed with an unexpected server error. Nothing was published; run the sync again, and report it if it repeats."
+    },
+    {
+      "anchor": "workflow-path-invalid",
+      "code": "workflow-path-invalid",
+      "message": "The workflow path must name a file under `.github/workflows/`."
+    },
+    {
+      "anchor": "yaml-alias",
+      "code": "yaml-alias",
+      "message": "YAML anchors-as-aliases (`*name`) and merge keys (`<<`) are not allowed."
+    },
+    {
+      "anchor": "yaml-duplicate-key",
+      "code": "yaml-duplicate-key",
+      "message": "A YAML mapping repeats a key."
+    },
+    {
+      "anchor": "yaml-file-too-large",
+      "code": "yaml-file-too-large",
+      "message": "A YAML file is larger than the per-file limit."
+    },
+    {
+      "anchor": "yaml-invalid",
+      "code": "yaml-invalid",
+      "message": "A YAML file could not be parsed."
+    },
+    {
+      "anchor": "yaml-non-finite",
+      "code": "yaml-non-finite",
+      "message": "A YAML number is NaN or infinite."
+    },
+    {
+      "anchor": "yaml-too-deep",
+      "code": "yaml-too-deep",
+      "message": "A YAML document nests deeper than the limit."
+    }
+  ],
+  "format": 1,
+  "guide": "https://exelichai.com/guides/github-sync"
+}

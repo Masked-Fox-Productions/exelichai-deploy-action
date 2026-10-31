@@ -25,7 +25,7 @@ class Context:
     api_url: str
     game_id: Optional[str]
     timeout: float = DEFAULT_TIMEOUT
-    transport: api.Transport = api.urllib_transport
+    transport: api.Transport = api.pooled_transport
     clock: Callable[[], float] = time.time
     sleep: Callable[[float], None] = time.sleep
     poll_interval: float = POLL_INTERVAL
@@ -65,9 +65,10 @@ class Context:
         return client.credential
 
 
-def git(folder: str, *args: str) -> Optional[str]:
-    """``git -C folder args`` stdout (stripped), or ``None`` when git is
-    missing or the folder is not a checkout."""
+def git(folder: str, *args: str, strip: bool = True) -> Optional[str]:
+    """``git -C folder args`` stdout (stripped unless ``strip=False``, for
+    ``-z`` output), or ``None`` when git is missing, the folder is not a
+    checkout, or the command exits non-zero."""
     try:
         done = subprocess.run(["git", "-C", folder, *args], capture_output=True, text=True,
                               timeout=30, check=False)
@@ -75,7 +76,7 @@ def git(folder: str, *args: str) -> Optional[str]:
         return None
     if done.returncode != 0:
         return None
-    return done.stdout.strip()
+    return done.stdout.strip() if strip else done.stdout
 
 
 def plural(n: int, word: str) -> str:

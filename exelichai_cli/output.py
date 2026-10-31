@@ -51,6 +51,13 @@ GUIDE_URL_ENV = "EXELICHAI_GUIDE_URL"
 #: Where the creator guide is served: the site's in-app ``/guides/github-sync``
 #: page (one anchor per reason code). ``EXELICHAI_GUIDE_URL`` overrides it.
 DEFAULT_GUIDE_URL = "https://exelichai.com/guides/github-sync"
+#: Each stage's guide, by the API origin the command talks to: a run against
+#: the dev API links the dev site's guide, never production's (Phase 1
+#: finding 6). Any other origin (a local stack) gets the default.
+GUIDE_URL_BY_API_ORIGIN = {
+    "https://api.exelichai.com": DEFAULT_GUIDE_URL,
+    "https://apidev.exelichai.com": "https://dev.exelichai.com/guides/github-sync",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -116,10 +123,30 @@ def catalogue() -> Dict[str, Dict[str, str]]:
     return _CATALOGUE
 
 
-def guide_url(code: str) -> str:
-    base = (os.environ.get(GUIDE_URL_ENV) or DEFAULT_GUIDE_URL).rstrip("/")
+def guide_base_for(api_url: Optional[str], env: Optional[Mapping[str, str]] = None) -> str:
+    """The guide to link for a command talking to ``api_url``:
+    ``EXELICHAI_GUIDE_URL`` if set, else that stage's site, else the default."""
+    env = os.environ if env is None else env
+    if env.get(GUIDE_URL_ENV):
+        return env[GUIDE_URL_ENV]
+    origin = (api_url or "").strip().rstrip("/").lower()
+    return GUIDE_URL_BY_API_ORIGIN.get(origin, DEFAULT_GUIDE_URL)
+
+
+def guide_url(code: str, base: Optional[str] = None) -> str:
+    base = (base or os.environ.get(GUIDE_URL_ENV) or DEFAULT_GUIDE_URL).rstrip("/")
     anchor = catalogue().get(code, {}).get("anchor") or code
     return f"{base}#{anchor}"
+
+
+#: What the CLI adds after a reason's catalogue sentence where the CLI itself
+#: is the way through (the catalogue's text is lane-neutral: plan
+#: 2026-10-21-002 Unit 1).
+HINTS = {
+    "mass-retire": "if the removal is intended, push again with --allow-mass-retire",
+    "first-import-held": "to import it over the Studio's content, push again with "
+                         "--allow-first-import (or choose Keep the Studio in the GitHub panel)",
+}
 
 
 def message_for(problem: Problem) -> str:
@@ -141,7 +168,8 @@ def _escape_property(value: str) -> str:
     return _escape_data(value).replace(":", "%3A").replace(",", "%2C")
 
 
-def annotation(problem: Problem, *, path_prefix: str = "") -> str:
+def annotation(problem: Problem, *, path_prefix: str = "",
+               guide_base: Optional[str] = None) -> str:
     """``::error file=<repo path>,line=<n>,title=<code>::<message>``."""
     props = []
     if problem.file:
@@ -152,7 +180,9 @@ def annotation(problem: Problem, *, path_prefix: str = "") -> str:
     text = message_for(problem)
     if problem.detail:
         text = f"{text} ({problem.detail})"
-    text = f"{text} {guide_url(problem.code)}"
+    if problem.code in HINTS:
+        text = f"{text} Hint: {HINTS[problem.code]}."
+    text = f"{text} {guide_url(problem.code, guide_base)}"
     return f"::error {','.join(props)}::{_escape_data(text)}"
 
 
@@ -171,6 +201,9 @@ class Reporter:
     color: bool = False
     #: Prepended to tree paths in annotations (the folder, repo-relative).
     path_prefix: str = ""
+    #: The guide every printed link points into (:func:`guide_base_for`);
+    #: ``None`` is the default guide.
+    guide_base: Optional[str] = None
     summary_lines: List[str] = field(default_factory=list)
 
     @classmethod
@@ -190,7 +223,10 @@ class Reporter:
         return f"\x1b[{code}m{text}\x1b[0m" if self.color else text
 
     def info(self, text: str = "") -> None:
-        print(text, file=self.out)
+        # Flushed: `exelichai dev` runs for hours, and piped or logged its
+        # progress lines would otherwise sit in the buffer (stderr already
+        # flushes per line, so only the errors would show).
+        print(text, file=self.out, flush=True)
 
     def warn(self, text: str) -> None:
         if self.actions:
@@ -215,9 +251,12 @@ class Reporter:
               file=self.err)
         if problem.detail:
             print(f"  {problem.detail}", file=self.err)
-        print(f"  guide: {guide_url(problem.code)}", file=self.err)
+        if problem.code in HINTS:
+            print(f"  hint: {HINTS[problem.code]}", file=self.err)
+        print(f"  guide: {guide_url(problem.code, self.guide_base)}", file=self.err)
         if self.actions:
-            print(annotation(problem, path_prefix=self.path_prefix), file=self.out)
+            print(annotation(problem, path_prefix=self.path_prefix, guide_base=self.guide_base),
+                  file=self.out)
 
     def problems(self, problems: Iterable[Problem]) -> None:
         for p in problems:
@@ -234,7 +273,7 @@ class Reporter:
                 where = f" `{self.path_prefix}{p.file}{':' + str(p.line) if p.line else ''}`"
             detail = f" — {_md(p.detail)}" if p.detail else ""
             self.summary(f"- **{p.code}**{where}: {_md(message_for(p))}{detail} "
-                         f"([guide]({guide_url(p.code)}))")
+                         f"([guide]({guide_url(p.code, self.guide_base)}))")
 
     def flush_summary(self) -> None:
         if not self.summary_lines:

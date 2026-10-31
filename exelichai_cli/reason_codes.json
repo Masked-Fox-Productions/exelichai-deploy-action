@@ -1,6 +1,16 @@
 {
   "codes": [
     {
+      "anchor": "access-lost",
+      "code": "access-lost",
+      "message": "The Exelichai App no longer covers the repository: it was uninstalled, suspended, or the repository was removed from it."
+    },
+    {
+      "anchor": "already-applied",
+      "code": "already-applied",
+      "message": "This commit is already what the branch last synced, so nothing was done. Use Re-run on GitHub to sync it again on purpose."
+    },
+    {
       "anchor": "already-connected",
       "code": "already-connected",
       "message": "This game is already connected. Edit the binding, or disconnect first."
@@ -21,9 +31,64 @@
       "message": "The Exelichai API could not be reached, or answered with something unexpected. Try again."
     },
     {
+      "anchor": "app-code-invalid",
+      "code": "app-code-invalid",
+      "message": "GitHub did not accept the sign-in it sent back (it expired, or it was not issued for this connection). Start again from the game's GitHub panel."
+    },
+    {
+      "anchor": "app-not-bound",
+      "code": "app-not-bound",
+      "message": "This game is not connected through the Exelichai GitHub App."
+    },
+    {
+      "anchor": "app-not-installed",
+      "code": "app-not-installed",
+      "message": "The Exelichai App is not installed on the account that owns the repository, or your GitHub account cannot see that installation."
+    },
+    {
+      "anchor": "app-pending-limit",
+      "code": "app-pending-limit",
+      "message": "Too many GitHub App connections are waiting to finish. Finish or restart one from its game's GitHub panel."
+    },
+    {
+      "anchor": "app-publishing-off",
+      "code": "app-publishing-off",
+      "message": "The merge published nothing: publishing from the publish branch through the Exelichai App is off. Turn it on in the game's GitHub panel, or publish with the workflow."
+    },
+    {
+      "anchor": "app-repo-choose",
+      "code": "app-repo-choose",
+      "message": "Choose the repository to connect from the ones your GitHub account can push to."
+    },
+    {
+      "anchor": "app-repo-not-listed",
+      "code": "app-repo-not-listed",
+      "message": "That repository is not one of the choices you were offered. Pick one from the list, or connect another by name."
+    },
+    {
+      "anchor": "app-repo-not-selected",
+      "code": "app-repo-not-selected",
+      "message": "The Exelichai App is installed on the repository's account, but the repository is not one of the repositories it was given."
+    },
+    {
+      "anchor": "app-repo-read-only",
+      "code": "app-repo-read-only",
+      "message": "Your GitHub account cannot push to the repository. Connecting through the App needs write access."
+    },
+    {
+      "anchor": "app-state-invalid",
+      "code": "app-state-invalid",
+      "message": "This GitHub link has expired, was already used, or was started by another Exelichai account. Start again from the game's GitHub panel."
+    },
+    {
       "anchor": "archive-invalid",
       "code": "archive-invalid",
       "message": "The downloaded export does not match its manifest (size, sha256 or file list). Nothing was written; run the command again."
+    },
+    {
+      "anchor": "base-entity-retired",
+      "code": "base-entity-retired",
+      "message": "A base game no longer has an entity this game inherits from, so this game's copy of it was set aside."
     },
     {
       "anchor": "binding-displaced",
@@ -76,6 +141,11 @@
       "message": "Some files the manifest lists were not uploaded. Upload every file the manifest step asked for, then finalise again."
     },
     {
+      "anchor": "branch-create-refused",
+      "code": "branch-create-refused",
+      "message": "A rule on the repository (a ruleset or branch protection) refused the branch Exelichai sends your changes on. Allow the Exelichai App to create and update branches under `exelichai/`."
+    },
+    {
       "anchor": "branch-invalid",
       "code": "branch-invalid",
       "message": "A branch name is not valid, or the draft and publish branches are the same."
@@ -86,8 +156,38 @@
       "message": "The request names a branch its credential was not issued for."
     },
     {
-      "anchor": "conflict-keep-mine-unavailable",
-      "code": "conflict-keep-mine-unavailable",
+      "anchor": "branch-missing",
+      "code": "branch-missing",
+      "message": "The branch is not in the repository (it was deleted or renamed)."
+    },
+    {
+      "anchor": "branch-moved",
+      "code": "branch-moved",
+      "message": "Someone else changed the branch Exelichai sends your changes on, so Exelichai did not overwrite it."
+    },
+    {
+      "anchor": "branch-not-exelichai",
+      "code": "branch-not-exelichai",
+      "message": "Exelichai only writes to its own branches (`exelichai/<game>/...`) and their pull requests in the connected repository, so it left this one alone."
+    },
+    {
+      "anchor": "cap-refused",
+      "code": "cap-refused",
+      "message": "This pull request's preview was not built: the game already has as many open previews as it may. Close or merge another pull request and it is built automatically."
+    },
+    {
+      "anchor": "cli-upgrade-required",
+      "code": "cli-upgrade-required",
+      "message": "This game is larger than your `exelichai` command can download. Upgrade it (`pip install -U exelichai`) and run the command again."
+    },
+    {
+      "anchor": "commit-missing",
+      "code": "commit-missing",
+      "message": "GitHub has no commit with that id in the repository."
+    },
+    {
+      "anchor": "conflict-keep-studio-unavailable",
+      "code": "conflict-keep-studio-unavailable",
       "message": "This conflict can only take the repository's value: a rules or pack change, or a hide, reaches a connected game only from the repository."
     },
     {
@@ -103,7 +203,7 @@
     {
       "anchor": "conflict-resolve-invalid",
       "code": "conflict-resolve-invalid",
-      "message": "The resolution must say `keep: repo` or `keep: mine`."
+      "message": "The resolution must say `keep: repo` or `keep: studio`."
     },
     {
       "anchor": "conflict-value-missing",
@@ -191,6 +291,31 @@
       "message": "The draft branch's last synced tree cannot be read back, so a publish could not restore the draft afterwards. Push the draft branch again, then retry."
     },
     {
+      "anchor": "discard-not-found",
+      "code": "discard-not-found",
+      "message": "That discard is gone: it was already restored or dismissed. Refresh the GitHub panel."
+    },
+    {
+      "anchor": "discard-restore-confirm",
+      "code": "discard-restore-confirm",
+      "message": "You've edited this item since it was discarded. Restoring replaces that edit; confirm to go ahead."
+    },
+    {
+      "anchor": "discard-restore-failed",
+      "code": "discard-restore-failed",
+      "message": "The discarded value could not be written back. Nothing was restored, and the discard is kept."
+    },
+    {
+      "anchor": "discard-restore-unavailable",
+      "code": "discard-restore-unavailable",
+      "message": "This kind of change cannot be restored from Discards yet. Set it again where you edit it, using the value shown here."
+    },
+    {
+      "anchor": "discard-value-missing",
+      "code": "discard-value-missing",
+      "message": "The stored copy of this discarded value could not be read. Dismiss it, or try again later."
+    },
+    {
       "anchor": "draft-import-failed",
       "code": "draft-import-failed",
       "message": "Part of the draft import failed, so nothing was recorded as synced. The next push (or a re-run) retries it."
@@ -199,6 +324,11 @@
       "anchor": "draft-not-restored",
       "code": "draft-not-restored",
       "message": "The publish finished, but the draft could not be put back to the draft branch afterwards, so it still shows the publish branch. Push the draft branch again to restore it."
+    },
+    {
+      "anchor": "edited-in-github-only",
+      "code": "edited-in-github-only",
+      "message": "This change replaces more of the game than the Studio can track as an unsent change (a YAML upload, an entity import or a room merge), so on a game connected to GitHub it is made in the repository. Make it there and push."
     },
     {
       "anchor": "environment-invalid",
@@ -214,6 +344,11 @@
       "anchor": "exchange-invalid",
       "code": "exchange-invalid",
       "message": "The OIDC sign-in request is malformed (it needs `game_id` and `id_token`)."
+    },
+    {
+      "anchor": "export-building",
+      "code": "export-building",
+      "message": "The export is being built. Run the command again in a minute; the finished zip is kept for a day."
     },
     {
       "anchor": "export-failed",
@@ -266,6 +401,16 @@
       "message": "The finalise request is malformed (message, author, branch or sha)."
     },
     {
+      "anchor": "first-import-held",
+      "code": "first-import-held",
+      "message": "This game already has content in the Art Studio, so the first import from the repository waits for the owner. In the GitHub panel, import this commit (it lists what would change) or keep the Studio. From a terminal, push again with `--allow-first-import`."
+    },
+    {
+      "anchor": "first-import-not-pending",
+      "code": "first-import-not-pending",
+      "message": "That commit can no longer be imported or declined: a newer commit reached the branch, or the hold is gone. Refresh the GitHub panel."
+    },
+    {
       "anchor": "folder-invalid",
       "code": "folder-invalid",
       "message": "The folder is not a safe path inside the repository."
@@ -273,7 +418,7 @@
     {
       "anchor": "folder-not-empty",
       "code": "folder-not-empty",
-      "message": "The folder already holds a repo tree. `exelichai init --force` replaces it, after showing what would change."
+      "message": "The folder already holds a repo tree. On an initialised game `init` writes only into an empty folder (use `exelichai pull`); otherwise `exelichai init --force` replaces it, after showing what would change."
     },
     {
       "anchor": "folder-overlap",
@@ -294,6 +439,21 @@
       "anchor": "gh-unavailable",
       "code": "gh-unavailable",
       "message": "The GitHub CLI (`gh`) is not installed or not signed in. Install it and run `gh auth login`, or copy the repository's ids from GitHub yourself."
+    },
+    {
+      "anchor": "github-rate-limited",
+      "code": "github-rate-limited",
+      "message": "GitHub's API rate limit was reached. Exelichai retries after GitHub's reset time."
+    },
+    {
+      "anchor": "github-unavailable",
+      "code": "github-unavailable",
+      "message": "GitHub could not be reached, or answered with an error. Exelichai retries."
+    },
+    {
+      "anchor": "head-lagging",
+      "code": "head-lagging",
+      "message": "GitHub had not caught up with the push yet (the branch still read an older commit). Exelichai tries again shortly."
     },
     {
       "anchor": "job-cancelled",
@@ -331,6 +491,11 @@
       "message": "The sync job lost its hold on the game (it ran past its time limit), so it stopped before writing anything more."
     },
     {
+      "anchor": "local-checks-unavailable",
+      "code": "local-checks-unavailable",
+      "message": "The offline checks are not installed. Install them with `pip install 'exelichai[local]'`, or run `exelichai validate` without `--local` to check on the server."
+    },
+    {
       "anchor": "manifest-invalid",
       "code": "manifest-invalid",
       "message": "`exelichai.yaml` is malformed."
@@ -343,12 +508,22 @@
     {
       "anchor": "mass-retire",
       "code": "mass-retire",
-      "message": "This push would remove more than half of the Art Studio content this branch last synced. If that is intended, push again with `--allow-mass-retire`."
+      "message": "This push would remove more than half of the Art Studio content this branch last synced (at least 3 items)."
+    },
+    {
+      "anchor": "mass-retire-not-pending",
+      "code": "mass-retire-not-pending",
+      "message": "That removal can no longer be accepted: a newer sync ran on the branch, or the refusal changed. Refresh the GitHub panel."
     },
     {
       "anchor": "media-image-too-large",
       "code": "media-image-too-large",
       "message": "An image's pixel dimensions are over the limit."
+    },
+    {
+      "anchor": "media-ref-ignored",
+      "code": "media-ref-ignored",
+      "message": "A `media/` reference names a file the sync ignores, so it is never published."
     },
     {
       "anchor": "media-ref-missing",
@@ -378,12 +553,17 @@
     {
       "anchor": "not-initialised",
       "code": "not-initialised",
-      "message": "This game has not been initialised for GitHub sync. Run `exelichai init` (the initial export) first."
+      "message": "This game has not been initialised for GitHub sync yet. It initialises itself after it is connected; if that failed, the owner can press Initialise here in the GitHub panel."
     },
     {
       "anchor": "not-owner",
       "code": "not-owner",
       "message": "Only the game's owner may manage its GitHub connection."
+    },
+    {
+      "anchor": "nothing-to-send",
+      "code": "nothing-to-send",
+      "message": "No changes were chosen to send (changes waiting on a conflict cannot be sent)."
     },
     {
       "anchor": "oidc-expired",
@@ -456,9 +636,29 @@
       "message": "A path escapes the folder or uses a forbidden character."
     },
     {
+      "anchor": "permission-missing",
+      "code": "permission-missing",
+      "message": "The Exelichai App lacks a permission this needs. Accept the App's updated permissions on GitHub."
+    },
+    {
+      "anchor": "pr-closed",
+      "code": "pr-closed",
+      "message": "The pull request is closed, so its preview was not built."
+    },
+    {
+      "anchor": "pr-from-fork",
+      "code": "pr-from-fork",
+      "message": "Previews are not built for pull requests from forks. The pull request is still validated."
+    },
+    {
+      "anchor": "pr-missing",
+      "code": "pr-missing",
+      "message": "The pull request is not in the repository."
+    },
+    {
       "anchor": "presentation-dirty",
       "code": "presentation-dirty",
-      "message": "`presentation/` has uncommitted changes. Commit or stash them first, or pass `--force` to overwrite them."
+      "message": "`presentation/` has uncommitted changes. Commit or stash them first, or pass `--force` to pull around them (they are kept, never overwritten)."
     },
     {
       "anchor": "presentation-duplicate",
@@ -479,6 +679,26 @@
       "anchor": "presentation-refused",
       "code": "presentation-refused",
       "message": "A presentation file failed the import's validation."
+    },
+    {
+      "anchor": "preview-superseded",
+      "code": "preview-superseded",
+      "message": "The pull request has a newer commit than the preview you chose, so nothing was promoted. Wait for its preview to build, then promote that one."
+    },
+    {
+      "anchor": "promote-behind-main",
+      "code": "promote-behind-main",
+      "message": "The pull request is behind the publish branch (something was merged there after it branched), so promoting it would drop that work. Bring the publish branch into the pull request, wait for its new preview, then promote."
+    },
+    {
+      "anchor": "promote-not-eligible",
+      "code": "promote-not-eligible",
+      "message": "Only an open pull request from this repository into the publish branch, whose exelichai check passed on its newest commit, can be promoted."
+    },
+    {
+      "anchor": "promote-pin-changed",
+      "code": "promote-pin-changed",
+      "message": "The game's base or packs changed after this preview was built, so it would not go live as you played it. Push to the pull request to rebuild its preview, then promote."
     },
     {
       "anchor": "publish-failed",
@@ -506,6 +726,31 @@
       "message": "This game is connected to GitHub, so it is published from the repository: push to the publish branch to publish. Studio Publish is off while it is connected."
     },
     {
+      "anchor": "pull-baseline-moved",
+      "code": "pull-baseline-moved",
+      "message": "The draft branch synced again while `exelichai pull` was running. Pull again."
+    },
+    {
+      "anchor": "pull-behind",
+      "code": "pull-behind",
+      "message": "Your checkout is behind (or has diverged from) the commit Exelichai last synced. Update it from the draft branch first, then pull."
+    },
+    {
+      "anchor": "pull-conflict",
+      "code": "pull-conflict",
+      "message": "Your checkout and the Studio both changed the same thing since the last sync, so `exelichai pull` left it alone. Push your checkout, then resolve the conflict in the GitHub panel or with `exelichai conflicts`."
+    },
+    {
+      "anchor": "pull-needs-first-push",
+      "code": "pull-needs-first-push",
+      "message": "This game has never been pushed. Push the initialised folder to the draft branch once, then pull."
+    },
+    {
+      "anchor": "ref-exists",
+      "code": "ref-exists",
+      "message": "The branch Exelichai was about to create already exists in the repository."
+    },
+    {
       "anchor": "ref-inaccessible",
       "code": "ref-inaccessible",
       "message": "A referenced game or pack is not available to this game's owner: it must be theirs, shared with them, a platform module, or published to the Asset Store."
@@ -521,9 +766,19 @@
       "message": "A referenced game or pack does not exist on this server."
     },
     {
+      "anchor": "repo-host-unsupported",
+      "code": "repo-host-unsupported",
+      "message": "Only repositories on github.com can be connected."
+    },
+    {
       "anchor": "repo-id-invalid",
       "code": "repo-id-invalid",
       "message": "A repository or owner id must be a positive whole number."
+    },
+    {
+      "anchor": "repo-inaccessible",
+      "code": "repo-inaccessible",
+      "message": "The Exelichai App is installed for the repository, but GitHub no longer shows it (deleted, transferred or renamed away)."
     },
     {
       "anchor": "repo-lookup-failed",
@@ -544,6 +799,21 @@
       "anchor": "restore-owed",
       "code": "restore-owed",
       "message": "A publish from GitHub is still putting the draft back. Try again once it finishes."
+    },
+    {
+      "anchor": "retries-exhausted",
+      "code": "retries-exhausted",
+      "message": "This commit kept failing for a reason that might have cleared by itself, so Exelichai stopped retrying it. Push again, or use Re-run on GitHub."
+    },
+    {
+      "anchor": "revert-source-missing",
+      "code": "revert-source-missing",
+      "message": "The draft branch has not synced to Exelichai yet, so there is no repository value to go back to. Push the draft branch once, then try again."
+    },
+    {
+      "anchor": "rules-dirty",
+      "code": "rules-dirty",
+      "message": "`exelichai.yaml` or a rules file it lists has uncommitted changes. Commit or stash them first, or pass `--force` to pull around them (they are kept, never overwritten)."
     },
     {
       "anchor": "rules-duplicate-key",
@@ -569,6 +839,11 @@
       "anchor": "rules-invalid",
       "code": "rules-invalid",
       "message": "A rules file is malformed."
+    },
+    {
+      "anchor": "rules-kept-live-uncompilable",
+      "code": "rules-kept-live-uncompilable",
+      "message": "The repository's rules do not work with Studio changes you have not sent yet (a parent pin, a game setting or a pack), so they are not applied yet. Send those changes to GitHub, or discard them in the Studio."
     },
     {
       "anchor": "rules-packs",
@@ -606,14 +881,39 @@
       "message": "A game seeded from the platform's own repository cannot be connected to GitHub."
     },
     {
+      "anchor": "send-head-unimportable",
+      "code": "send-head-unimportable",
+      "message": "The draft branch's newest commit does not import, so Exelichai cannot build your changes on top of it. Nothing was written to GitHub. Fix the errors listed (in the repository or here in the Studio), then send again."
+    },
+    {
+      "anchor": "send-not-faithful",
+      "code": "send-not-faithful",
+      "message": "Exelichai could not prove that the files it built carry exactly the changes you chose, so it did not send them. Nothing was written to GitHub."
+    },
+    {
+      "anchor": "send-pr-superseded",
+      "code": "send-pr-superseded",
+      "message": "Someone changed the branch of your open Exelichai pull request, so Exelichai opened a new pull request on a fresh branch and closed the old one with a link to it. Their commits were not overwritten."
+    },
+    {
       "anchor": "sha-mismatch",
       "code": "sha-mismatch",
       "message": "The request names a commit its credential was not issued for."
     },
     {
+      "anchor": "shadow-closed",
+      "code": "shadow-closed",
+      "message": "This preview has closed (its pull request closed, or the game's GitHub connection changed), so nothing more is built into it."
+    },
+    {
       "anchor": "swap-interrupted",
       "code": "swap-interrupted",
       "message": "The publish stopped before it went live (the worker was interrupted or the main import failed). The draft was restored; re-run the workflow."
+    },
+    {
+      "anchor": "sync-baseline-upgrading",
+      "code": "sync-baseline-upgrading",
+      "message": "GitHub sync is preparing this game. Try again shortly."
     },
     {
       "anchor": "sync-busy",
@@ -644,6 +944,11 @@
       "anchor": "system-game",
       "code": "system-game",
       "message": "A platform game or module cannot be connected to GitHub."
+    },
+    {
+      "anchor": "tarball-invalid",
+      "code": "tarball-invalid",
+      "message": "The repository archive GitHub sent could not be read as a tar.gz file."
     },
     {
       "anchor": "token-expiry-invalid",
@@ -691,9 +996,19 @@
       "message": "A file is not part of the repo format."
     },
     {
+      "anchor": "unsent-address-invalid",
+      "code": "unsent-address-invalid",
+      "message": "That is not the address of a change."
+    },
+    {
       "anchor": "unsent-edits",
       "code": "unsent-edits",
-      "message": "The Art Studio has edits the pushed tree does not carry. Run `exelichai pull`, commit the result and push again, so the edits are not lost."
+      "message": "The Art Studio has edits the pushed tree does not carry. Send them to GitHub (or run `exelichai pull`, commit the result and push again), so the edits are not lost."
+    },
+    {
+      "anchor": "unsent-not-found",
+      "code": "unsent-not-found",
+      "message": "That change is not an unsent change any more (it was sent and imported, or it is held as a conflict). Refresh the GitHub panel."
     },
     {
       "anchor": "upload-manifest-invalid",
@@ -714,6 +1029,11 @@
       "anchor": "workflow-path-invalid",
       "code": "workflow-path-invalid",
       "message": "The workflow path must name a file under `.github/workflows/`."
+    },
+    {
+      "anchor": "writeback-unrepresentable",
+      "code": "writeback-unrepresentable",
+      "message": "Exelichai could not write this change into your file without disturbing the text around it, so it was left out. Make it in the repository by hand."
     },
     {
       "anchor": "yaml-alias",

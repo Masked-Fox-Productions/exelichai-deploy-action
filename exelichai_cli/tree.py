@@ -391,6 +391,20 @@ def in_tree_area(path: str, rules: Sequence[str] = ()) -> bool:
             or path.startswith((PRESENTATION_DIR, MEDIA_DIR)))
 
 
+def folder_empty(root: str) -> bool:
+    """``root`` is absent or holds no game file (hidden entries -- ``.git``,
+    ``.gitkeep`` -- do not count, as every read skips them, and neither does a
+    top-level README / LICENSE, as a new GitHub repository starts with): the
+    state of a game folder before ``exelichai init`` fills it. A folder holding
+    any other file but no manifest is not empty (that is ``manifest-missing``).
+    The server's rule is the same (``app_tree.FolderEmpty``)."""
+    if not os.path.isdir(root):
+        return True
+    files, links = walk_paths(root, lambda _path: True)
+    return not links and all("/" not in p and p.upper().startswith(("README", "LICENSE"))
+                             for p in files)
+
+
 def walk_paths(root: str, include: Callable[[str], bool]
                ) -> Tuple[Dict[str, str], List[str]]:
     """``({tree path: absolute path}, symlinks)`` under ``root`` that

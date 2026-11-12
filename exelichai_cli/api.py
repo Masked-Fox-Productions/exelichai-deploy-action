@@ -588,6 +588,51 @@ class ApiClient:
     def finalise(self, body: Mapping[str, Any]) -> Dict[str, Any]:
         return self.call("POST", self._game() + "/github/sync/finalise", body)
 
+    def game_tests(self, tests: Mapping[str, str], *,
+                   version: Optional[str] = None) -> Dict[str, Any]:
+        """Run the game's own tests (plan 2026-10-26-002 Unit 9b) against the
+        draft, or the release ``version``: the report; writes nothing."""
+        body: Dict[str, Any] = {"tests": dict(tests)}
+        if version:
+            body["version"] = version
+        return self.call("POST", self._game() + "/github/tests", body)
+
+    def sync_status(self) -> Dict[str, Any]:
+        """The deploy branches' newest jobs and last platform re-sync attempts."""
+        return self.call("GET", self._game() + "/github/sync/status")
+
+    def rerun(self, *, lane: Optional[str] = None, branch: Optional[str] = None) -> Dict[str, Any]:
+        """Re-run a deploy branch's last commit through the App."""
+        body = {k: v for k, v in (("lane", lane), ("branch", branch)) if v}
+        return self.call("POST", self._game() + "/github/sync/rerun", body)
+
+    def _definition_path(self, entity_type: str, entity_id: str) -> str:
+        return (self._game() + "/github/definitions/" + urllib.parse.quote(entity_type, safe="")
+                + "/" + urllib.parse.quote(entity_id, safe=""))
+
+    @staticmethod
+    def _version_query(version: Optional[str], **extra: Optional[str]) -> str:
+        params = {k: v for k, v in (("version", version), *extra.items()) if v}
+        return "?" + urllib.parse.urlencode(params) if params else ""
+
+    def definitions(self, entity_type: Optional[str] = None, *,
+                    version: Optional[str] = None) -> Dict[str, Any]:
+        """Every definition of the draft (or ``version``), with its row lineage."""
+        return self.call("GET", self._game() + "/github/definitions"
+                         + self._version_query(version, type=entity_type))
+
+    def definition(self, entity_type: str, entity_id: str, *,
+                   version: Optional[str] = None) -> Dict[str, Any]:
+        """One definition, resolved, with its provenance."""
+        return self.call("GET", self._definition_path(entity_type, entity_id)
+                         + self._version_query(version))
+
+    def definition_references(self, entity_type: str, entity_id: str, *,
+                              version: Optional[str] = None) -> Dict[str, Any]:
+        """Who references one definition, across the game's own chain."""
+        return self.call("GET", self._definition_path(entity_type, entity_id) + "/references"
+                         + self._version_query(version))
+
     def job(self, job_id: str) -> Dict[str, Any]:
         return self.call("GET", self._game() + "/github/sync/jobs/"
                          + urllib.parse.quote(job_id, safe=""))

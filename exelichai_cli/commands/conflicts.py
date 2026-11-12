@@ -65,6 +65,7 @@ def list_conflicts(ctx: Context) -> int:
     rep = ctx.reporter
     ctx.authenticate()
     body = ctx.client().conflicts()
+    rep.report_data("conflicts", body)
     entries = body.get("conflicts") or []
     if not entries:
         rep.info("no conflicts held")
@@ -92,6 +93,7 @@ def resolve(ctx: Context, conflict_id: str, keep: str) -> int:
         raise CliError([Problem("conflict-resolve-invalid", f"--keep {keep!r}")])
     ctx.authenticate()
     out = ctx.client().resolve(conflict_id, keep).get("resolved") or {}
+    ctx.reporter.report_data("resolved", out)
     ctx.reporter.info(f"resolved {conflict_id}: kept {keep}"
                       + (f" ({out.get('display_name')})" if out.get("display_name") else ""))
     return EXIT_OK
@@ -114,6 +116,7 @@ def show(ctx: Context, conflict_id: str) -> int:
     rep = ctx.reporter
     ctx.authenticate()
     c = ctx.client().conflict(conflict_id).get("conflict") or {}
+    rep.report_data("conflict", c)
     field = f" [{c.get('field')}]" if c.get("field") else ""
     rep.info(f"{c.get('conflict_id')}  {c.get('display_name')}{field}  "
              f"({c.get('kind')} {c.get('address')})")
@@ -149,6 +152,7 @@ def list_unsent(ctx: Context) -> int:
     rep = ctx.reporter
     ctx.authenticate()
     body = ctx.client().unsent()
+    rep.report_data("unsent", body)
     changes = body.get("changes") or []
     if not changes:
         rep.info("no unsent Studio changes")
@@ -171,6 +175,7 @@ def list_unsent(ctx: Context) -> int:
 def discard_change(ctx: Context, address: str) -> int:
     ctx.authenticate()
     out = ctx.client().discard_change(address).get("discarded") or {}
+    ctx.reporter.report_data("discarded", out)
     saved = out.get("discard") or {}
     ctx.reporter.info(f"discarded {out.get('kind') or ''} {out.get('address') or address}: "
                       "the Studio is back to the repository's value"
@@ -196,6 +201,7 @@ def list_discards(ctx: Context) -> int:
         if not cursor or not isinstance(cursor, str) or cursor in seen:
             break
         seen.add(cursor)
+    rep.report_data("discards", {"discards": entries})
     if not entries:
         rep.info("no discards")
         return EXIT_OK
@@ -222,6 +228,7 @@ def restore_discard(ctx: Context, discard_id: str, *, confirm: bool = False) -> 
             exc.notes.append(f"To replace that edit: exelichai discards restore {discard_id} "
                              "--confirm")
         raise
+    ctx.reporter.report_data("restored", out)
     ctx.reporter.info(f"restored {discard_id}: {out.get('kind')} {out.get('address')} "
                       f"({out.get('outcome')}); it is an unsent Studio edit again -- "
                       "`exelichai pull` brings it into the folder")
@@ -233,6 +240,7 @@ def dismiss_discard(ctx: Context, discard_id: Optional[str]) -> int:
     client = ctx.client()
     if discard_id is None:
         out = client.dismiss_all_discards()
+        ctx.reporter.report_data("dismissed", out)
         ctx.reporter.info(f"dismissed {plural(int(out.get('dismissed') or 0), 'discard')}")
     else:
         client.dismiss_discard(discard_id)

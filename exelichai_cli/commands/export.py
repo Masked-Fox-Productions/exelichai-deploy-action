@@ -221,6 +221,7 @@ def _apply(ctx: Context, writes: Mapping[str, Delivered], deletes: List[str]) ->
     then renamed into place -- so a failed download writes nothing, and an
     interrupted one leaves no partial file at a destination."""
     tree.preflight_writes(ctx.folder, [*writes, *deletes])
+    os.makedirs(ctx.folder, exist_ok=True)  # a game folder not created yet
     media = {p: v for p, v in writes.items() if isinstance(v, MediaEntry)}
     for path in media:
         _confined_media(ctx.folder, path)
@@ -611,6 +612,9 @@ def pull(ctx: Context, *, force: bool = False, draft_branch: str = DEFAULT_DRAFT
                                                    "was written", file=path)])
     _apply(ctx, writes, deletes)
 
+    rep.report_data("pull", {"commit": commit, "written": sorted(writes), "deleted": deletes,
+                             "kept": kept, "kept_local": list(body.get("kept_local") or []),
+                             "waiting": list(body.get("waiting") or [])})
     rep.info(f"pulled from the Studio against {commit[:12]} "
              f"({'your checkout is ahead' if where == 'ahead' else 'up to date'})")
     list_paths(rep, "write", sorted(writes))

@@ -91,6 +91,11 @@
       "message": "A base game no longer has an entity this game inherits from, so this game's copy of it was set aside."
     },
     {
+      "anchor": "base-moved",
+      "code": "base-moved",
+      "message": "A game this one builds on published a new version while Exelichai was re-syncing it after a platform update, so nothing was published: live is unchanged and the draft was put back. The new version reaches live only when you publish it."
+    },
+    {
       "anchor": "binding-displaced",
       "code": "binding-displaced",
       "message": "The repository's real owner proved control of this folder, so this binding no longer holds it."
@@ -266,6 +271,21 @@
       "message": "Game credentials are not configured on this stage."
     },
     {
+      "anchor": "definition-not-found",
+      "code": "definition-not-found",
+      "message": "No definition of that type and id in this game's draft (or the release named)."
+    },
+    {
+      "anchor": "definition-sealed",
+      "code": "definition-sealed",
+      "message": "This change restates, patches or amends a row its declaring game has sealed. A sealed row can be extended only through the attach points it declares and the values it marks open, or retracted."
+    },
+    {
+      "anchor": "definition-type-invalid",
+      "code": "definition-type-invalid",
+      "message": "A definition type is ASSET, TXN or XTAB."
+    },
+    {
       "anchor": "deployment-expired",
       "code": "deployment-expired",
       "message": "That deployment is older than the last 20, so what it served may already have been cleaned up. Roll back to a newer one, or push the commit again."
@@ -331,6 +351,11 @@
       "message": "This change replaces more of the game than the Studio can track as an unsent change (a YAML upload, an entity import or a room merge), so on a game connected to GitHub it is made in the repository. Make it there and push."
     },
     {
+      "anchor": "encode-unstable",
+      "code": "encode-unstable",
+      "message": "Reading this game's exported files and writing them back did not give the same files. The detail names the file."
+    },
+    {
       "anchor": "environment-invalid",
       "code": "environment-invalid",
       "message": "The GitHub Environment name is not valid."
@@ -386,14 +411,14 @@
       "message": "An Art Studio entity or cell could not be exported, so the export refuses rather than leave it out."
     },
     {
+      "anchor": "export-refused",
+      "code": "export-refused",
+      "message": "The game could not be exported to check it. The detail names why."
+    },
+    {
       "anchor": "export-reserved-key",
       "code": "export-reserved-key",
       "message": "The game carries a platform-decided setting a repository may not hold (for example a custom client bundle)."
-    },
-    {
-      "anchor": "family-unproven",
-      "code": "family-unproven",
-      "message": "This game's base family has not passed the repo round-trip proof yet, so it cannot sync."
     },
     {
       "anchor": "finalise-invalid",
@@ -434,6 +459,21 @@
       "anchor": "format-unsupported",
       "code": "format-unsupported",
       "message": "`exelichai.yaml` declares a format this server does not read."
+    },
+    {
+      "anchor": "game-not-faithful",
+      "code": "game-not-faithful",
+      "message": "This game's export does not round-trip yet, so it cannot sync. Nothing in your files is wrong."
+    },
+    {
+      "anchor": "game-tests-failed",
+      "code": "game-tests-failed",
+      "message": "The game's own tests (`tests/*.yaml`) failed against the publish branch, so nothing was published. What players see is unchanged and the draft was restored; the detail names each failing test, step and condition. Fix the game or the test, then push again."
+    },
+    {
+      "anchor": "game-tests-invalid",
+      "code": "game-tests-invalid",
+      "message": "The game's test files (`tests/*.yaml`) could not be read: a path, a file's size or a test's shape is not allowed. The detail names the file."
     },
     {
       "anchor": "gh-unavailable",
@@ -671,9 +711,19 @@
       "message": "A presentation file is malformed or misplaced."
     },
     {
+      "anchor": "presentation-key-dropped",
+      "code": "presentation-key-dropped",
+      "message": "A presentation file's `owned:` holds a key the Art Studio does not keep, so a push drops it."
+    },
+    {
       "anchor": "presentation-missing",
       "code": "presentation-missing",
       "message": "The tree has no `presentation/` folder."
+    },
+    {
+      "anchor": "presentation-not-canonical",
+      "code": "presentation-not-canonical",
+      "message": "A presentation file holds content the Art Studio stores differently, so a pull after a push would change it. `exelichai fmt` changes those values in place and keeps the rest of the file."
     },
     {
       "anchor": "presentation-refused",
@@ -699,6 +749,11 @@
       "anchor": "promote-pin-changed",
       "code": "promote-pin-changed",
       "message": "The game's base or packs changed after this preview was built, so it would not go live as you played it. Push to the pull request to rebuild its preview, then promote."
+    },
+    {
+      "anchor": "proof-error",
+      "code": "proof-error",
+      "message": "The round-trip check could not run. Nothing in your files is wrong; the detail names the error."
     },
     {
       "anchor": "publish-failed",
@@ -753,7 +808,7 @@
     {
       "anchor": "ref-inaccessible",
       "code": "ref-inaccessible",
-      "message": "A referenced game or pack is not available to this game's owner: it must be theirs, shared with them, a platform module, or published to the Asset Store."
+      "message": "A referenced game or pack is not available to this game's owner: it must be theirs, shared with them, or published to the Asset Store. A platform module can always be imported, but only one the Studio offers as a base can be inherited."
     },
     {
       "anchor": "ref-out-of-chain",
@@ -796,9 +851,19 @@
       "message": "GitHub has no public repository by that name. For a private repository, paste its numeric ids."
     },
     {
+      "anchor": "rerun-invalid",
+      "code": "rerun-invalid",
+      "message": "A re-run names a deploy lane (`draft` or `publish`) or one of the connection's deploy branches, and the two must agree."
+    },
+    {
       "anchor": "restore-owed",
       "code": "restore-owed",
       "message": "A publish from GitHub is still putting the draft back. Try again once it finishes."
+    },
+    {
+      "anchor": "retained-tree-missing",
+      "code": "retained-tree-missing",
+      "message": "Exelichai's copy of this branch's last synced files could not be read, so its re-sync after a platform update imported nothing. Push the branch again."
     },
     {
       "anchor": "retries-exhausted",
@@ -856,6 +921,11 @@
       "message": "The rules failed the import's validation."
     },
     {
+      "anchor": "rules-unsent",
+      "code": "rules-unsent",
+      "message": "Straight after the export, a rules entry read as an edit not yet sent to GitHub. An edit made in the Studio while the game was being set up does this too."
+    },
+    {
       "anchor": "run-stale",
       "code": "run-stale",
       "message": "An older workflow run arrived after a newer run of the same workflow on this branch had already synced, so it was not applied."
@@ -874,6 +944,11 @@
       "anchor": "scene-key-unknown",
       "code": "scene-key-unknown",
       "message": "A scene carries a key the scene storage does not keep, so saving it would silently drop that key. Remove it or rename it to a key scenes support."
+    },
+    {
+      "anchor": "seal-not-sealable",
+      "code": "seal-not-sealable",
+      "message": "This row cannot be sealed: it reaches the player's browser, a client-run transaction depends on it, its conditions use a named predicate, or it is inherited (only the game that declares a row can seal it)."
     },
     {
       "anchor": "seed-game",
@@ -904,6 +979,11 @@
       "anchor": "shadow-closed",
       "code": "shadow-closed",
       "message": "This preview has closed (its pull request closed, or the game's GitHub connection changed), so nothing more is built into it."
+    },
+    {
+      "anchor": "sub-game-unavailable",
+      "code": "sub-game-unavailable",
+      "message": "A `sub_games:` ref names no published game this game's owner may compose: it must be theirs or public, and have a published release."
     },
     {
       "anchor": "swap-interrupted",
@@ -1019,6 +1099,11 @@
       "anchor": "upload-quota",
       "code": "upload-quota",
       "message": "This game has asked to upload too many files or bytes this hour. Wait a while and try again."
+    },
+    {
+      "anchor": "validate-refused",
+      "code": "validate-refused",
+      "message": "This game's own export did not pass the checks a push runs. The detail names the check and where."
     },
     {
       "anchor": "worker-error",

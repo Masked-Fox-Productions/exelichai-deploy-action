@@ -21,12 +21,13 @@ package (``pip install 'exelichai[local]'``) and names the ones it cannot run.
 
 from __future__ import annotations
 
+import os
 import re
 import threading
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from exelichai_cli import api, tree
-from exelichai_cli.commands import Context, git, plural
+from exelichai_cli.commands import Context, gametest, git, plural
 from exelichai_cli.output import (CliError, EXIT_AUTH, EXIT_CONFLICTS, EXIT_FAILED, EXIT_OK,
                                   EXIT_PUBLISH_REFUSED, EXIT_QUOTA, EXIT_TIMEOUT,
                                   PUBLISH_REFUSED_CODES, Problem, catalogue, exit_code_for,
@@ -207,9 +208,21 @@ def report_ignored(rep, scanned: tree.Scan, server: Optional[Mapping[str, Any]] 
         rep.info(f"  ... and {count - MAX_IGNORED_NAMED} more")
 
 
+def _folder_label(ctx: Context) -> str:
+    rel = os.path.relpath(ctx.folder, ctx.workspace)
+    return "the folder" if rel == "." else f"the folder {rel.replace(os.sep, '/')!r}"
+
+
 def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
         allow_first_import: bool = False) -> int:
     rep = ctx.reporter
+    if tree.folder_empty(ctx.folder):
+        # A game folder not filled yet (a repository just connected through
+        # Export into an empty repository): nothing to send, never a failure --
+        # so a README-only commit's Action run stays green.
+        rep.info(f"nothing to {command}: {_folder_label(ctx)} is empty. Run `exelichai init` "
+                 "there to download the game's files, then commit and push.")
+        return EXIT_OK
     scanned = tree.scan(ctx.folder)
     if tree.MANIFEST not in scanned.entries:
         raise CliError([Problem("manifest-missing", f"no {tree.MANIFEST} in the folder; "
@@ -219,6 +232,9 @@ def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
     if manifest_game and manifest_game != game_id:
         rep.warn(f"{tree.MANIFEST} names {manifest_game!r}; syncing to {game_id!r} "
                  "(the connected game wins)")
+    # The game's own tests ride beside the tree (plan 2026-10-26-002 Unit 9b):
+    # read first, so one over its cap refuses before anything is uploaded.
+    tests = gametest.read_tests(ctx.folder)
     cred = _credential_for(ctx, command)
     client = ctx.client()
     lane = cred.lane or "validate"
@@ -234,6 +250,8 @@ def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
 
     body: Dict[str, Any] = {"protocol": api.UPLOAD_PROTOCOL, "session": sent["session"],
                             "manifest_sha": sent["manifest_sha"], **_report_text(ctx.folder)}
+    if tests:
+        body["tests"] = tests
     if allow_mass_retire:
         body["allow_mass_retire"] = True
     if allow_first_import:
@@ -251,6 +269,7 @@ def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
                 body["branch"] = branch
     done = client.finalise(body)
     if done.get("skipped"):
+        rep.report_job({"state": "skipped", "lane": lane, "reason": done.get("reason")})
         rep.info(f"skipped: {done.get('reason')} -- nothing changed since the last sync")
         rep.summary(f"### exelichai: {LANE_WORDS.get(lane, lane)} skipped")
         rep.summary(f"Nothing changed since the last sync (`{done.get('reason')}`).")
@@ -281,6 +300,7 @@ def await_job(ctx: Context, job: Mapping[str, Any]) -> Optional[Mapping[str, Any
     while job.get("state") not in TERMINAL_STATES:
         if ctx.clock() >= deadline:
             p = Problem("job-timeout", f"job {job_id} is still {job.get('state')}")
+            rep.report_job(job)
             rep.problem(p)
             rep.info(f"job id: {job_id}")
             rep.summary(f"### exelichai: timed out waiting for job `{job_id}`")
@@ -310,6 +330,7 @@ def _report_warnings(rep, job: Mapping[str, Any]) -> None:
 
 def report_job(ctx: Context, job: Mapping[str, Any], *, lane: Optional[str]) -> int:
     rep = ctx.reporter
+    rep.report_job(job)
     state = job.get("state")
     job_id = job.get("job_id")
     problems = [Problem.from_dict(r) for r in (job.get("reasons") or []) if isinstance(r, dict)]
@@ -361,30 +382,37 @@ def report_job(ctx: Context, job: Mapping[str, Any], *, lane: Optional[str]) -> 
 # validate --local (plan 2026-10-18-003 Unit 13)
 # ---------------------------------------------------------------------------
 
-def _local_rules():
-    """The ``exelichai_rules`` package (the ``local`` extra), or a refusal
-    naming how to install it."""
+def local_rules(module: str = ""):
+    """The ``exelichai_rules`` package (the ``local`` extra), or its
+    ``module`` (``"presentation"``), or a refusal naming how to install it."""
+    import importlib
+
+    name = "exelichai_rules" + (f".{module}" if module else "")
     try:
-        import exelichai_rules
+        return importlib.import_module(name)
     except ModuleNotFoundError as exc:
-        if exc.name != "exelichai_rules":
-            raise
-        raise CliError([Problem("local-checks-unavailable",
-                                "the exelichai-rules package is not installed")]) from None
-    return exelichai_rules
+        if exc.name == "exelichai_rules":
+            raise CliError([Problem("local-checks-unavailable",
+                                    "the exelichai-rules package is not installed")]) from None
+        if exc.name == name:
+            raise CliError([Problem("local-checks-unavailable",
+                                    "the installed exelichai-rules is older than this "
+                                    "exelichai: install the same version of both")]) from None
+        raise
 
 
 def run_local(ctx: Context) -> int:
     """``validate --local``: the server's structural checks on the folder,
     offline. Reported like a validate job (its reasons, warnings and exit
     code), plus the checks that need the server, by name."""
-    rules = _local_rules()
+    rules = local_rules()
     report = rules.validate_folder(ctx.folder)
     return report_local(ctx, report, version=getattr(rules, "__version__", "?"))
 
 
 def report_local(ctx: Context, report: Mapping[str, Any], *, version: str) -> int:
     rep = ctx.reporter
+    rep.report_job(report)
     state = report.get("state")
     counts = report.get("validation") or {}
     game = f"{report['game_id']}: " if report.get("game_id") else ""

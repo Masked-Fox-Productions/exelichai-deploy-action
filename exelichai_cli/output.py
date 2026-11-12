@@ -27,6 +27,8 @@ EXIT_TIMEOUT = 3            # timeout (the job id is printed)
 EXIT_AUTH = 4               # auth error
 EXIT_QUOTA = 5              # quota or stale run
 EXIT_PUBLISH_REFUSED = 6    # publish refused (unsent edits or conflicts)
+EXIT_USAGE = 64             # usage error
+EXIT_INTERRUPTED = 130      # interrupted
 
 #: Codes that are an authentication / authorisation problem (exit 4).
 AUTH_CODES = frozenset({
@@ -46,6 +48,29 @@ QUOTA_CODES = frozenset({
 })
 #: What refuses a publish because the Studio holds edits (exit 6).
 PUBLISH_REFUSED_CODES = frozenset({"unsent-edits", "conflicts-held"})
+
+#: What each exit code means, as the guide's exit-code table says it: the
+#: ``outcome`` of a structured result, so an agent need not know the numbers.
+OUTCOMES = {
+    EXIT_OK: "succeeded",
+    EXIT_FAILED: "failed",
+    EXIT_CONFLICTS: "conflicts held",
+    EXIT_TIMEOUT: "timed out",
+    EXIT_AUTH: "auth error",
+    EXIT_QUOTA: "quota or stale run",
+    EXIT_PUBLISH_REFUSED: "publish refused",
+    EXIT_USAGE: "usage error",
+    EXIT_INTERRUPTED: "interrupted",
+}
+
+
+def public(body: Mapping[str, Any]) -> Dict[str, Any]:
+    """A server answer without the client's own ``_``-prefixed keys."""
+    return {k: v for k, v in body.items() if not str(k).startswith("_")}
+
+
+def outcome_for(exit_code: int) -> str:
+    return OUTCOMES.get(exit_code, "failed")
 
 GUIDE_URL_ENV = "EXELICHAI_GUIDE_URL"
 #: Where the creator guide is served: the site's in-app ``/guides/github-sync``
@@ -275,6 +300,13 @@ class Reporter:
             self.summary(f"- **{p.code}**{where}: {_md(message_for(p))}{detail} "
                          f"([guide]({guide_url(p.code, self.guide_base)}))")
 
+    # -- structured data (only a recording reporter keeps it) ----------------
+    def report_job(self, job: Mapping[str, Any]) -> None:
+        """The final job mapping (or the local report) a command ends on."""
+
+    def report_data(self, kind: str, data: Mapping[str, Any]) -> None:
+        """A server response a command printed, handed over raw as ``kind``."""
+
     def flush_summary(self) -> None:
         if not self.summary_lines:
             return
@@ -282,6 +314,53 @@ class Reporter:
             with open(self.summary_path, "a", encoding="utf-8") as fh:
                 fh.write("\n".join(self.summary_lines) + "\n")
         self.summary_lines = []
+
+
+@dataclass
+class RecordingReporter(Reporter):
+    """The printing reporter's interface, collecting instead of printing:
+    what ``--json`` prints and what an MCP tool returns. The job summary is
+    still written in GitHub Actions, as the printing reporter writes it."""
+
+    recorded_problems: List[Problem] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    lines: List[str] = field(default_factory=list)
+    job: Optional[Dict[str, Any]] = None
+    data: Dict[str, Any] = field(default_factory=dict)
+
+    def info(self, text: str = "") -> None:
+        if text:
+            self.lines.append(text)
+
+    def warn(self, text: str) -> None:
+        self.warnings.append(text)
+
+    def mask(self, value: Optional[str]) -> None:
+        pass
+
+    def problem(self, problem: Problem) -> None:
+        self.recorded_problems.append(problem)
+
+    def report_job(self, job: Mapping[str, Any]) -> None:
+        self.job = public(job)
+
+    def report_data(self, kind: str, data: Mapping[str, Any]) -> None:
+        self.data[kind] = public(data)
+
+    def problem_dict(self, p: Problem) -> Dict[str, Any]:
+        out: Dict[str, Any] = {"code": p.code, "message": message_for(p), "detail": p.detail,
+                               "file": p.file, "line": p.line,
+                               "guide": guide_url(p.code, self.guide_base)}
+        if p.code in HINTS:
+            out["hint"] = HINTS[p.code]
+        return out
+
+    def result(self, exit_code: int) -> Dict[str, Any]:
+        """``{exit_code, outcome, problems, warnings, info, job, data}``."""
+        return {"exit_code": exit_code, "outcome": outcome_for(exit_code),
+                "problems": [self.problem_dict(p) for p in self.recorded_problems],
+                "warnings": list(self.warnings), "info": list(self.lines),
+                "job": self.job, "data": dict(self.data)}
 
 
 def _md(text: str) -> str:

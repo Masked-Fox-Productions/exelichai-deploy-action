@@ -9,6 +9,7 @@ stale run; 6 publish refused (unsent edits or conflicts); 64 usage error.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -16,9 +17,8 @@ from typing import Callable, IO, List, Mapping, Optional
 
 from exelichai_cli import __version__, api, tree
 from exelichai_cli.commands import Context, DEFAULT_TIMEOUT, repo_relative
-from exelichai_cli.output import CliError, Reporter, guide_base_for
-
-EXIT_USAGE = 64
+from exelichai_cli.output import (EXIT_INTERRUPTED, EXIT_USAGE, CliError, Problem,
+                                  RecordingReporter, Reporter, guide_base_for)
 
 DESCRIPTION = """\
 Sync an Exelichai game with a GitHub repository.
@@ -50,6 +50,10 @@ def build_parser() -> argparse.ArgumentParser:
                                      "exelichai.yaml's game_id)")
     p.add_argument("--folder", help="the repo folder holding exelichai.yaml (env "
                                     "EXELICHAI_FOLDER; default .)")
+    p.add_argument("--json", dest="json_result", action="store_true",
+                   help="print one JSON object instead of the text report: exit_code, outcome, "
+                        "problems (code, message, file, line, guide), warnings, info, the job "
+                        "and the server's data")
     p.add_argument("--timeout", type=float, help=f"seconds to wait for a sync job (default "
                                                   f"{DEFAULT_TIMEOUT})")
     sub = p.add_subparsers(dest="command", metavar="command", parser_class=_Parser)
@@ -127,9 +131,54 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--verbose", action="store_true",
                    help="print each push's legs (manifest, upload, finalise, job)")
     s.add_argument("--no-open", action="store_true", help="don't open the play link")
+    s = sub.add_parser("test", help="run the game's own tests (tests/*.yaml) on the server "
+                                    "against the draft, writing nothing (validate token)")
+    s.add_argument("--version", dest="release", default=None,
+                   help="run against this release id instead of the draft")
+    s = sub.add_parser("fmt", help="change, in place, what a push would store differently in "
+                                   "each presentation/ file, keeping its layout and comments "
+                                   "(what `exelichai pull` writes), offline (no token); needs "
+                                   "`pip install 'exelichai[local]'`")
+    s.add_argument("--check", action="store_true",
+                   help="write nothing: list the files that differ and exit 1 (for CI)")
+    s = sub.add_parser("show", help="print one definition the last push compiled, each field "
+                                    "marked own, inherited or overridden, or --list a type "
+                                    "(a token the owner minted: validate or author)")
+    s.add_argument("type", nargs="?", metavar="type", help="ASSET, TXN or XTAB")
+    s.add_argument("id", nargs="?", help="the definition's id")
+    s.add_argument("--list", dest="list_type", nargs="?", const="", metavar="type",
+                   default=None, help="list the definitions (of one type) with their lineage")
+    s.add_argument("--version", dest="release", default=None,
+                   help="read this release id instead of the draft")
+    s = sub.add_parser("refs", help="who references one definition, across the game's own "
+                                    "chain (a token the owner minted: validate or author)")
+    s.add_argument("type", metavar="type", help="ASSET, TXN or XTAB")
+    s.add_argument("id", help="the definition's id")
+    s.add_argument("--version", dest="release", default=None,
+                   help="read this release id instead of the draft")
+    sub.add_parser("mcp", help="serve this folder's checks to an AI agent as MCP tools over "
+                               "stdio (EXELICHAI_VALIDATE_TOKEN and EXELICHAI_AUTHOR_TOKEN); "
+                               "needs `pip install 'exelichai[mcp]'`")
     s = sub.add_parser("status", help="show a sync job (any game credential)")
     s.add_argument("job_id")
     s.add_argument("--wait", action="store_true", help="wait for the job to finish")
+    s = sub.add_parser("sync", help="the deploy branches' sync status, or re-run a branch "
+                                    "without GitHub")
+    ssub = s.add_subparsers(dest="action", metavar="action", parser_class=_Parser)
+    ssub.required = True
+    r = ssub.add_parser("status", help="each deploy branch's newest sync, who started it, "
+                                       "and its last platform re-sync attempt (any game "
+                                       "credential)")
+    r.add_argument("--game", dest="sync_game", help="the game (same as --game-id)")
+    r.add_argument("--json", action="store_true", help="print the server's answer as JSON")
+    r = ssub.add_parser("rerun", help="re-run a deploy branch's last synced commit through "
+                                      "the Exelichai GitHub App, as Re-run on its check does "
+                                      "(author token: the draft branch)")
+    r.add_argument("--game", dest="sync_game", help="the game (same as --game-id)")
+    r.add_argument("--branch", help="the draft or publish branch")
+    r.add_argument("--lane", choices=("draft", "publish"), help="the lane, instead of (or "
+                                                                "with) --branch")
+    r.add_argument("--json", action="store_true", help="print the server's answer as JSON")
     return p
 
 
@@ -137,10 +186,26 @@ def main(argv: Optional[List[str]] = None, *, env: Optional[Mapping[str, str]] =
          transport: api.Transport = api.pooled_transport, out: Optional[IO[str]] = None,
          err: Optional[IO[str]] = None, cwd: Optional[str] = None,
          clock: Callable[[], float] = time.time,
-         sleep: Callable[[float], None] = time.sleep, poll_interval: Optional[float] = None) -> int:
+         sleep: Callable[[float], None] = time.sleep, poll_interval: Optional[float] = None,
+         reporter: Optional[Reporter] = None) -> int:
+    """Run one command. ``reporter`` replaces the one built from the env (the
+    MCP server passes a :class:`RecordingReporter` and reads its result)."""
     env = dict(os.environ if env is None else env)
     args = build_parser().parse_args(argv)
-    reporter = Reporter.from_env(env, out=out, err=err)
+    as_json = reporter is None and args.json_result
+    if reporter is None:
+        reporter = (RecordingReporter if as_json else Reporter).from_env(env, out=out, err=err)
+    code = _run(args, env, reporter, transport=transport, cwd=cwd, clock=clock, sleep=sleep,
+                poll_interval=poll_interval)
+    if as_json:
+        assert isinstance(reporter, RecordingReporter)
+        print(json.dumps(reporter.result(code), indent=2, default=str), file=out or sys.stdout)
+    return code
+
+
+def _run(args: argparse.Namespace, env: Mapping[str, str], reporter: Reporter, *,
+         transport: api.Transport, cwd: Optional[str], clock: Callable[[], float],
+         sleep: Callable[[float], None], poll_interval: Optional[float]) -> int:
     api_url = args.api_url or env.get("EXELICHAI_API_URL") or api.DEFAULT_API_URL
     reporter.guide_base = guide_base_for(api_url, env)
     in_actions = env.get("GITHUB_ACTIONS") == "true"
@@ -164,13 +229,14 @@ def main(argv: Optional[List[str]] = None, *, env: Optional[Mapping[str, str]] =
         reporter.summary_problems(exc.problems)
         return exc.exit_code
     except KeyboardInterrupt:
-        return 130
+        return EXIT_INTERRUPTED
     finally:
         reporter.flush_summary()
 
 
 def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
-    from exelichai_cli.commands import conflicts, connect, dev, export, status, sync
+    from exelichai_cli.commands import (conflicts, connect, dev, export, fmt, gametest, show,
+                                        status, sync)
 
     cmd = args.command
     if cmd == "init":
@@ -205,11 +271,56 @@ def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
         return conflicts.list_discards(ctx)
     if cmd == "dev":
         return dev.run(ctx, once=args.once, verbose=args.verbose, open_browser=not args.no_open)
+    if cmd == "test":
+        return gametest.run(ctx, version=args.release)
+    if cmd == "fmt":
+        return fmt.run(ctx, check=args.check)
+    if cmd == "show":
+        if args.list_type is not None:
+            return show.show_list(ctx, args.list_type or args.type, version=args.release)
+        if not args.type or not args.id:
+            raise CliError([Problem("definition-type-invalid",
+                                    "show <type> <id>, or show --list [type]")], EXIT_USAGE)
+        return show.show(ctx, args.type, args.id, version=args.release)
+    if cmd == "refs":
+        return show.refs(ctx, args.type, args.id, version=args.release)
+    if cmd == "mcp":
+        return _serve_mcp(ctx)
     if cmd == "status":
         return status.status(ctx, args.job_id, wait=args.wait)
+    if cmd == "sync":
+        if args.sync_game:
+            ctx.game_id = args.sync_game
+        if args.action == "rerun":
+            if not args.branch and not args.lane:
+                raise CliError([Problem("rerun-invalid", "pass --branch or --lane")],
+                               EXIT_USAGE)
+            return status.sync_rerun(ctx, branch=args.branch, lane=args.lane,
+                                     as_json=args.json)
+        return status.sync_status(ctx, as_json=args.json)
     if cmd == "connect":
         return connect.connect(ctx, args.repository)
     raise AssertionError(cmd)  # pragma: no cover
+
+
+MCP_INSTALL = "pip install 'exelichai[mcp]'"
+
+
+def _serve_mcp(ctx: Context) -> int:
+    """``exelichai mcp``: the server lives behind the ``mcp`` extra and is
+    imported only here, so the CLI itself never needs the SDK."""
+    if sys.version_info < (3, 10):
+        print(f"exelichai mcp needs Python 3.10 or newer (this is "
+              f"{sys.version_info[0]}.{sys.version_info[1]})", file=ctx.reporter.err)
+        return EXIT_USAGE
+    try:
+        from exelichai_cli import mcp_server
+    except ModuleNotFoundError as exc:
+        if not (exc.name or "").split(".")[0] in ("mcp", "mcp_types", "pydantic", "anyio"):
+            raise
+        print(f"exelichai mcp needs the MCP SDK: {MCP_INSTALL}", file=ctx.reporter.err)
+        return EXIT_USAGE
+    return mcp_server.serve(ctx)
 
 
 def entry() -> None:

@@ -369,6 +369,14 @@ class StaticToken(Credential):
         return self.token
 
 
+def static_token_game(env: Mapping[str, str]) -> Optional[str]:
+    """The game ``EXELICHAI_TOKEN`` names, decoded offline, when it is a static
+    game token (``exlv_`` / ``exla_``); ``None`` for no token, a session
+    credential or a malformed one."""
+    token = (env.get(TOKEN_ENV) or "").strip()
+    return _token_game(token) if token[:5] in STATIC_PREFIX_SCOPE else None
+
+
 def _token_game(token: str) -> Optional[str]:
     parts = token[5:].split(".")
     if len(parts) != 4:
@@ -597,9 +605,21 @@ class ApiClient:
             body["version"] = version
         return self.call("POST", self._game() + "/github/tests", body)
 
+    def playtest(self, body: Mapping[str, Any]) -> Dict[str, Any]:
+        """Play the folder (plan 2026-11-11-002 Unit 7): ``body`` names an
+        upload session as finalise does (``protocol``, ``session``,
+        ``manifest_sha``; never finalised) or a stored ``version``, plus the
+        steps and their options. Writes nothing on the server; with ``save``
+        the answer carries the verified test's YAML."""
+        return self.call("POST", self._game() + "/github/playtest", body)
+
     def sync_status(self) -> Dict[str, Any]:
         """The deploy branches' newest jobs and last platform re-sync attempts."""
         return self.call("GET", self._game() + "/github/sync/status")
+
+    def base_update(self) -> Dict[str, Any]:
+        """What the waiting base update brings (404 when none waits)."""
+        return self.call("GET", self._game() + "/github/base-update")
 
     def rerun(self, *, lane: Optional[str] = None, branch: Optional[str] = None) -> Dict[str, Any]:
         """Re-run a deploy branch's last commit through the App."""
@@ -632,6 +652,25 @@ class ApiClient:
         """Who references one definition, across the game's own chain."""
         return self.call("GET", self._definition_path(entity_type, entity_id) + "/references"
                          + self._version_query(version))
+
+    def _parent_path(self, parent_id: str) -> str:
+        return (self._game() + "/github/parents/" + urllib.parse.quote(parent_id, safe="")
+                + "/definitions")
+
+    def parent_definitions(self, parent_id: str,
+                           entity_type: Optional[str] = None) -> Dict[str, Any]:
+        """Every definition of a game this game's owner could pick as a parent,
+        at its published release, as the owner sees it in the parent picker
+        (plan 2026-11-11-002 Unit 8)."""
+        return self.call("GET", self._parent_path(parent_id)
+                         + self._version_query(None, type=entity_type))
+
+    def parent_definition(self, parent_id: str, entity_type: str,
+                          entity_id: str) -> Dict[str, Any]:
+        """One definition of such a parent, with its provenance."""
+        return self.call("GET", self._parent_path(parent_id) + "/"
+                         + urllib.parse.quote(entity_type, safe="") + "/"
+                         + urllib.parse.quote(entity_id, safe=""))
 
     def job(self, job_id: str) -> Dict[str, Any]:
         return self.call("GET", self._game() + "/github/sync/jobs/"

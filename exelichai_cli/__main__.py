@@ -16,7 +16,7 @@ import time
 from typing import Callable, IO, List, Mapping, Optional
 
 from exelichai_cli import __version__, api, tree
-from exelichai_cli.commands import Context, DEFAULT_TIMEOUT, repo_relative
+from exelichai_cli.commands import Context, DEFAULT_TIMEOUT, docs, repo_relative
 from exelichai_cli.output import (EXIT_INTERRUPTED, EXIT_USAGE, CliError, Problem,
                                   RecordingReporter, Reporter, guide_base_for)
 
@@ -38,6 +38,13 @@ class _Parser(argparse.ArgumentParser):
     def error(self, message: str):  # usage errors must not read as "conflicts held" (2)
         self.print_usage(sys.stderr)
         self.exit(EXIT_USAGE, f"{self.prog}: error: {message}\n")
+
+
+def _json_flag(parser: argparse.ArgumentParser) -> None:
+    """``--json`` after the subcommand too (``exelichai docs search q --json``).
+    Suppressed by default, so it never resets a ``--json`` given before."""
+    parser.add_argument("--json", dest="json_result", action="store_true",
+                        default=argparse.SUPPRESS, help="the same as exelichai --json")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -135,6 +142,32 @@ def build_parser() -> argparse.ArgumentParser:
                                     "against the draft, writing nothing (validate token)")
     s.add_argument("--version", dest="release", default=None,
                    help="run against this release id instead of the draft")
+    s = sub.add_parser("playtest", help="play the folder on the server step by step, without "
+                                        "pushing, and print what the player is offered after "
+                                        "each step; --save writes the test it proves, verified "
+                                        "against the folder first (validate token)")
+    s.add_argument("steps_file", nargs="?", metavar="steps.yaml",
+                   help="the steps: a YAML list (run, expect, refused, look), or a mapping of "
+                        "steps with seed, player, pin and explain")
+    s.add_argument("--step", dest="steps", action="append", default=[], metavar="STEP",
+                   help="one more step, as YAML: 'run: open_door', "
+                        "'{refused: buy, with: {item: key}}', 'look' (repeatable)")
+    s.add_argument("--seed", type=int, default=None, help="the random seed (default 0)")
+    s.add_argument("--player", default=None, help="the player id to play as")
+    s.add_argument("--pin", dest="pins", action="append", default=[],
+                   metavar="ASSET[@OWNER]",
+                   help="a cell read after every step (owner defaults to buyer; repeatable)")
+    s.add_argument("--explain", action="append", default=[], metavar="TXN",
+                   help="say why this transaction is not offered (repeatable)")
+    s.add_argument("--version", dest="release", default=None,
+                   help="play this release id instead of the folder (uploads nothing)")
+    s.add_argument("--save", default=None, metavar="tests/<name>.yaml",
+                   help="write the test these steps prove, with an expect after each step "
+                        "for every --pin; written only when it passed against the folder "
+                        "(needs --pin)")
+    s.add_argument("--overwrite", action="store_true",
+                   help="let --save replace an existing test file")
+    s.add_argument("--name", default=None, help="the saved test's name")
     s = sub.add_parser("fmt", help="change, in place, what a push would store differently in "
                                    "each presentation/ file, keeping its layout and comments "
                                    "(what `exelichai pull` writes), offline (no token); needs "
@@ -156,19 +189,63 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("id", help="the definition's id")
     s.add_argument("--version", dest="release", default=None,
                    help="read this release id instead of the draft")
+    s = sub.add_parser("resolve", help="read a game this game's owner could pick as a parent "
+                                       "in the Studio, at its published release, as the owner "
+                                       "sees it there: one definition, or the list with no id "
+                                       "(a token the owner minted: validate or author)")
+    s.add_argument("parent", help="the parent game's id")
+    s.add_argument("type", nargs="?", metavar="type", help="ASSET, TXN or XTAB")
+    s.add_argument("id", nargs="?", help="the definition's id (leave out to list)")
+    s = sub.add_parser("docs", help="search the platform's authoring docs offline: the YAML "
+                                    "spec, the guides, the reason codes and first-party "
+                                    "examples (no token, no network); needs "
+                                    "`pip install 'exelichai[local]'`")
+    dsub = s.add_subparsers(dest="action", metavar="action", parser_class=_Parser)
+    dsub.required = True
+    r = dsub.add_parser("search", help="ranked sections for a question, each with its path, "
+                                       "anchor, status and link")
+    r.add_argument("query", nargs="+", help="the question or identifier")
+    r.add_argument("--kind", choices=docs.KINDS, help="only this kind of section")
+    r.add_argument("--include-planned", action="store_true",
+                   help="also return sections tagged [Planned] (left out by default: they "
+                        "describe what the platform does not do yet)")
+    r.add_argument("--limit", type=int, default=docs.DEFAULT_LIMIT,
+                   help=f"how many results (1 to 100; default {docs.DEFAULT_LIMIT})")
+    _json_flag(r)
+    r = dsub.add_parser("get", help="one whole section, by the path and anchor a search "
+                                    "printed (or `path#anchor`)")
+    r.add_argument("path", help="the document's path, e.g. docs/vision/YAML_SPEC.md")
+    r.add_argument("anchor", nargs="?", help="the section's anchor")
+    _json_flag(r)
+    _json_flag(dsub.add_parser("status", help="the commit, date and version the docs index "
+                                              "was built from"))
+    s = sub.add_parser("examples", help="find real YAML rows from first-party games and "
+                                        "modules by what they do, each with its file, line, "
+                                        "game and id, offline (no token, no network); needs "
+                                        "`pip install 'exelichai[local]'`")
+    s.add_argument("intent", nargs="+", help="what the row should do, e.g. 'a door that "
+                                             "needs an item'")
+    s.add_argument("--kind", choices=docs.EXAMPLE_KINDS, help="only this kind of row")
+    s.add_argument("--limit", type=int, default=docs.DEFAULT_LIMIT,
+                   help=f"how many results (1 to 100; default {docs.DEFAULT_LIMIT})")
+    _json_flag(s)
     sub.add_parser("mcp", help="serve this folder's checks to an AI agent as MCP tools over "
                                "stdio (EXELICHAI_VALIDATE_TOKEN and EXELICHAI_AUTHOR_TOKEN); "
                                "needs `pip install 'exelichai[mcp]'`")
     s = sub.add_parser("status", help="show a sync job (any game credential)")
     s.add_argument("job_id")
     s.add_argument("--wait", action="store_true", help="wait for the job to finish")
-    s = sub.add_parser("sync", help="the deploy branches' sync status, or re-run a branch "
-                                    "without GitHub")
+    s = sub.add_parser("sync", help="the deploy branches' sync status, a waiting base update, or "
+                                    "re-run a branch without GitHub")
     ssub = s.add_subparsers(dest="action", metavar="action", parser_class=_Parser)
     ssub.required = True
     r = ssub.add_parser("status", help="each deploy branch's newest sync, who started it, "
                                        "and its last platform re-sync attempt (any game "
                                        "credential)")
+    r.add_argument("--game", dest="sync_game", help="the game (same as --game-id)")
+    r.add_argument("--json", action="store_true", help="print the server's answer as JSON")
+    r = ssub.add_parser("update", help="what a waiting base update brings: labels, notes, "
+                                       "flags and the overrides it touches (read-only)")
     r.add_argument("--game", dest="sync_game", help="the game (same as --game-id)")
     r.add_argument("--json", action="store_true", help="print the server's answer as JSON")
     r = ssub.add_parser("rerun", help="re-run a deploy branch's last synced commit through "
@@ -235,8 +312,8 @@ def _run(args: argparse.Namespace, env: Mapping[str, str], reporter: Reporter, *
 
 
 def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
-    from exelichai_cli.commands import (conflicts, connect, dev, export, fmt, gametest, show,
-                                        status, sync)
+    from exelichai_cli.commands import (conflicts, connect, dev, export, fmt, gametest,
+                                        playtest, show, status, sync)
 
     cmd = args.command
     if cmd == "init":
@@ -273,6 +350,11 @@ def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
         return dev.run(ctx, once=args.once, verbose=args.verbose, open_browser=not args.no_open)
     if cmd == "test":
         return gametest.run(ctx, version=args.release)
+    if cmd == "playtest":
+        return playtest.run(ctx, steps_file=args.steps_file, steps=args.steps, seed=args.seed,
+                            player=args.player, pins=args.pins, explain=args.explain,
+                            version=args.release, save=args.save, overwrite=args.overwrite,
+                            name=args.name)
     if cmd == "fmt":
         return fmt.run(ctx, check=args.check)
     if cmd == "show":
@@ -284,6 +366,17 @@ def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
         return show.show(ctx, args.type, args.id, version=args.release)
     if cmd == "refs":
         return show.refs(ctx, args.type, args.id, version=args.release)
+    if cmd == "resolve":
+        return show.resolve(ctx, args.parent, args.type, args.id)
+    if cmd == "docs":
+        if args.action == "search":
+            return docs.search(ctx, " ".join(args.query), kind=args.kind,
+                               include_planned=args.include_planned, limit=args.limit)
+        if args.action == "get":
+            return docs.get(ctx, args.path, args.anchor)
+        return docs.status(ctx)
+    if cmd == "examples":
+        return docs.examples(ctx, " ".join(args.intent), kind=args.kind, limit=args.limit)
     if cmd == "mcp":
         return _serve_mcp(ctx)
     if cmd == "status":
@@ -297,6 +390,8 @@ def _dispatch(ctx: Context, args: argparse.Namespace) -> int:
                                EXIT_USAGE)
             return status.sync_rerun(ctx, branch=args.branch, lane=args.lane,
                                      as_json=args.json)
+        if args.action == "update":
+            return status.sync_update(ctx, as_json=args.json)
         return status.sync_status(ctx, as_json=args.json)
     if cmd == "connect":
         return connect.connect(ctx, args.repository)

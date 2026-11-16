@@ -26,7 +26,7 @@ import re
 import threading
 from typing import Any, Dict, Mapping, Optional, Tuple
 
-from exelichai_cli import api, tree
+from exelichai_cli import api, tree, upload_memo
 from exelichai_cli.commands import Context, gametest, git, plural
 from exelichai_cli.output import (CliError, EXIT_AUTH, EXIT_CONFLICTS, EXIT_FAILED, EXIT_OK,
                                   EXIT_PUBLISH_REFUSED, EXIT_QUOTA, EXIT_TIMEOUT,
@@ -46,6 +46,11 @@ URL_MARGIN = 60
 MAX_IGNORED_NAMED = 20
 
 
+#: Commands that sign in with OIDC only: a token in the environment is ignored,
+#: so it never chooses their game either.
+OIDC_ONLY = ("ci", "publish")
+
+
 def _credential_for(ctx: Context, command: str):
     if command == "publish":
         if not ctx.in_actions:
@@ -55,7 +60,7 @@ def _credential_for(ctx: Context, command: str):
                                     else "not running in GitHub Actions")], EXIT_AUTH)
         cred = ctx.authenticate(prefer_oidc=True)  # a token in env is ignored, never used
     else:
-        cred = ctx.authenticate(prefer_oidc=command == "ci")
+        cred = ctx.authenticate(prefer_oidc=command in OIDC_ONLY)
     if cred.kind == "oidc":
         cred.bearer()  # exchange now: the lane is only known afterwards
     want = {"validate": "validate", "push": "draft", "publish": "publish"}.get(command)
@@ -184,6 +189,10 @@ def upload_tree(ctx: Context, scanned: tree.Scan, *,
         confirmed -= candidates
     out.update(session=session, manifest_sha=digest, ignored=dict(ignored),
                confirmed=confirmed)
+    if target is None:
+        # A playtest of the unchanged folder may name this upload again
+        # (``upload_memo``); a dev push's goes to the dev shadow, never.
+        upload_memo.remember(ctx, scanned, out)
     return out
 
 
@@ -213,9 +222,22 @@ def _folder_label(ctx: Context) -> str:
     return "the folder" if rel == "." else f"the folder {rel.replace(os.sep, '/')!r}"
 
 
+def scan_game_folder(ctx: Context) -> Tuple[tree.Scan, str]:
+    """The folder scanned for an upload, and the game it goes to (resolved,
+    and any manifest mismatch warned about, by :meth:`Context.require_game_id`):
+    refused without ``exelichai.yaml``. ``validate``/``push`` and ``playtest``
+    upload what this returns with :func:`upload_tree`."""
+    scanned = tree.scan(ctx.folder)
+    if tree.MANIFEST not in scanned.entries:
+        raise CliError([Problem("manifest-missing", f"no {tree.MANIFEST} in the folder; "
+                                "run `exelichai init` first")])
+    return scanned, ctx.require_game_id()
+
+
 def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
         allow_first_import: bool = False) -> int:
     rep = ctx.reporter
+    ctx.prefer_oidc = command in OIDC_ONLY  # before the game is resolved: it follows the sign-in
     if tree.folder_empty(ctx.folder):
         # A game folder not filled yet (a repository just connected through
         # Export into an empty repository): nothing to send, never a failure --
@@ -223,15 +245,7 @@ def run(ctx: Context, command: str, *, allow_mass_retire: bool = False,
         rep.info(f"nothing to {command}: {_folder_label(ctx)} is empty. Run `exelichai init` "
                  "there to download the game's files, then commit and push.")
         return EXIT_OK
-    scanned = tree.scan(ctx.folder)
-    if tree.MANIFEST not in scanned.entries:
-        raise CliError([Problem("manifest-missing", f"no {tree.MANIFEST} in the folder; "
-                                "run `exelichai init` first")])
-    game_id = ctx.require_game_id()
-    _rules, manifest_game = tree.manifest_rules(ctx.folder)
-    if manifest_game and manifest_game != game_id:
-        rep.warn(f"{tree.MANIFEST} names {manifest_game!r}; syncing to {game_id!r} "
-                 "(the connected game wins)")
+    scanned, game_id = scan_game_folder(ctx)
     # The game's own tests ride beside the tree (plan 2026-10-26-002 Unit 9b):
     # read first, so one over its cap refuses before anything is uploaded.
     tests = gametest.read_tests(ctx.folder)

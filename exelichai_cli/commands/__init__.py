@@ -29,6 +29,10 @@ class Context:
     clock: Callable[[], float] = time.time
     sleep: Callable[[float], None] = time.sleep
     poll_interval: float = POLL_INTERVAL
+    #: The command ignores static tokens and signs in with OIDC only (``ci``,
+    #: ``publish``): a token's game must never choose its game.
+    prefer_oidc: bool = False
+    _game_resolved: bool = field(default=False, repr=False)
     _client: Optional[api.ApiClient] = field(default=None, repr=False)
 
     @property
@@ -36,18 +40,26 @@ class Context:
         return self.env.get("GITHUB_ACTIONS") == "true"
 
     def require_game_id(self) -> str:
-        """The game: ``--game-id`` / ``EXELICHAI_GAME_ID``, else the manifest's
-        ``game_id``, else the static token's own game."""
-        if self.game_id:
-            return self.game_id
+        """The game, resolved once per command. It follows the credential:
+        ``--game-id`` / ``EXELICHAI_GAME_ID``, else the static token's own game
+        (a token can only ever reach that one), else the manifest's
+        ``game_id``. A command that ignores static tokens (:attr:`prefer_oidc`:
+        ``ci``, ``publish``) never consults one: flag, else manifest. A
+        manifest naming another game is warned about here, once, and its id is
+        never sent."""
+        if self._game_resolved:
+            return self.game_id  # type: ignore[return-value]
         _rules, manifest_game = tree.manifest_rules(self.folder)
-        token = (self.env.get(api.TOKEN_ENV) or "").strip()
-        token_game = api._token_game(token) if token[:5] in api.STATIC_PREFIX_SCOPE else None
-        self.game_id = manifest_game or token_game
-        if not self.game_id:
+        token_game = None if self.prefer_oidc else api.static_token_game(self.env)
+        chosen = self.game_id or token_game or manifest_game
+        if not chosen:
             raise CliError([Problem("manifest-missing",
                                     "no game id: pass --game-id (or set EXELICHAI_GAME_ID)")])
-        return self.game_id
+        if manifest_game and manifest_game != chosen:
+            self.reporter.warn(f"{tree.MANIFEST} names {manifest_game!r}; using {chosen!r} "
+                               "(the connected game wins)")
+        self.game_id, self._game_resolved = chosen, True
+        return chosen
 
     def client(self) -> api.ApiClient:
         if self._client is None:
@@ -58,10 +70,19 @@ class Context:
                                          clock=self.clock, sleep=self.sleep)
         return self._client
 
-    def authenticate(self, *, prefer_oidc: bool = False) -> api.Credential:
+    def authenticate(self, *, prefer_oidc: Optional[bool] = None) -> api.Credential:
+        """The command's credential. ``prefer_oidc`` (default: the context's)
+        must be settled before the game is: the OIDC exchange is for the
+        client's game."""
+        mode = self.prefer_oidc if prefer_oidc is None else prefer_oidc
+        if mode != self.prefer_oidc:
+            if self._game_resolved:
+                raise RuntimeError("the game was resolved before the command chose how it "
+                                   "signs in; set Context.prefer_oidc first")
+            self.prefer_oidc = mode
         client = self.client()
         if client.credential is None:
-            client.credential = api.credential_from_env(client, self.env, prefer_oidc=prefer_oidc)
+            client.credential = api.credential_from_env(client, self.env, prefer_oidc=mode)
         return client.credential
 
 

@@ -1,6 +1,11 @@
 """``show`` and ``refs`` (plan 2026-11-07-004 Unit 3): read back what the
 game's last push to the draft compiled, without a platform checkout.
 
+``exelichai resolve <parent> [type] [id]`` (plan 2026-11-11-002 Unit 8) reads
+a game the owner could pick as a parent in the Studio -- at its published
+release, as the owner sees it in the parent picker -- one definition, or the
+list when no id is given.
+
 ``exelichai show <type> <id>`` prints one definition as a rules file would
 hold it, each field commented with where it comes from (own, inherited or
 overridden; a transaction's chain state and the game that declares it).
@@ -165,6 +170,42 @@ def show_list(ctx: Context, entity_type: Optional[str], *,
     rows = body.get("definitions") or []
     ctx.reporter.report_data("definitions", {"definitions": rows, "version": body.get("version")})
     ctx.reporter.info(f"{plural(len(rows), 'definition')}"
+                      + (f" of type {entity_type}" if entity_type else ""))
+    for row in rows:
+        state = (row.get("inheritance") or {}).get("state")
+        block = sealed_block(row)
+        sealed = f", sealed by {block.get('declared_by')}" if block else ""
+        ctx.reporter.info(f"  {row.get('entity_type')} {row.get('entity_id')}  "
+                          f"({state or row.get('lineage') or 'own'}{sealed})")
+    return EXIT_OK
+
+
+def resolve(ctx: Context, parent: str, entity_type: Optional[str] = None,
+            entity_id: Optional[str] = None) -> int:
+    """A parent's definitions at its published release: one (``type`` and
+    ``id``), or the list (of one type) when no id is given."""
+    entity_type = _type(entity_type) if entity_type else None
+    if entity_id and entity_type is None:
+        raise CliError([Problem("definition-type-invalid",
+                                "resolve <parent> <type> <id>: an id needs its type")])
+    client = ctx.client()
+    if entity_id:
+        body = _call(ctx, client.parent_definition, parent, entity_type, entity_id)
+        entity = body.get("entity") or {}
+        ctx.reporter.report_data("definition", entity)
+        ctx.reporter.report_data("release", {"game_id": parent,
+                                             "version": body.get("version")})
+        ctx.reporter.info(f"# {parent}: {entity_type} {entity_id}, its published release "
+                          f"({body.get('version')})")
+        for line in render(entity):
+            ctx.reporter.info(line)
+        return EXIT_OK
+    body = _call(ctx, client.parent_definitions, parent, entity_type)
+    rows = body.get("definitions") or []
+    ctx.reporter.report_data("definitions", {"game_id": parent, "definitions": rows,
+                                             "version": body.get("version")})
+    ctx.reporter.info(f"{parent}, its published release ({body.get('version')}): "
+                      f"{plural(len(rows), 'definition')}"
                       + (f" of type {entity_type}" if entity_type else ""))
     for row in rows:
         state = (row.get("inheritance") or {}).get("state")

@@ -93,7 +93,7 @@
     {
       "anchor": "base-moved",
       "code": "base-moved",
-      "message": "A game this one builds on published a new version while Exelichai was re-syncing it after a platform update, so nothing was published: live is unchanged and the draft was put back. The new version reaches live only when you publish it."
+      "message": "A game this one builds on has a newer version, usually from a platform update. Live is unchanged; the new version reaches live only when you publish from your publish branch yourself (or the owner presses Take the update in the Studio)."
     },
     {
       "anchor": "binding-displaced",
@@ -336,6 +336,21 @@
       "message": "The stored copy of this discarded value could not be read. Dismiss it, or try again later."
     },
     {
+      "anchor": "docs-not-found",
+      "code": "docs-not-found",
+      "message": "The docs index has no section at that path and anchor. The detail names the nearest ones; `exelichai docs search` finds a section by question."
+    },
+    {
+      "anchor": "docs-query-invalid",
+      "code": "docs-query-invalid",
+      "message": "The docs request is invalid: an empty query, an unknown kind, or a limit outside 1 to 100."
+    },
+    {
+      "anchor": "docs-unavailable",
+      "code": "docs-unavailable",
+      "message": "The docs index is not installed. Install it with `pip install 'exelichai[local]'` (or `'exelichai[mcp]'`), at the same version as `exelichai`."
+    },
+    {
       "anchor": "draft-import-failed",
       "code": "draft-import-failed",
       "message": "Part of the draft import failed, so nothing was recorded as synced. The next push (or a re-run) retries it."
@@ -419,6 +434,31 @@
       "anchor": "export-reserved-key",
       "code": "export-reserved-key",
       "message": "The game carries a platform-decided setting a repository may not hold (for example a custom client bundle)."
+    },
+    {
+      "anchor": "fill-folder-not-empty",
+      "code": "fill-folder-not-empty",
+      "message": "The game's folder on the draft branch is not known to be empty, so there is nothing to fill."
+    },
+    {
+      "anchor": "fill-limit-reached",
+      "code": "fill-limit-reached",
+      "message": "The pull request that adds the game's files was asked for three times on this connection."
+    },
+    {
+      "anchor": "fill-pr-open",
+      "code": "fill-pr-open",
+      "message": "Merge the open pull request that adds the game's files first."
+    },
+    {
+      "anchor": "fill-privacy-refused",
+      "code": "fill-privacy-refused",
+      "message": "The game's files name your account or an alias. Nothing was written."
+    },
+    {
+      "anchor": "fill-send-pr-open",
+      "code": "fill-send-pr-open",
+      "message": "A pull request from Send to GitHub is open. Merge or close it, then add the game's files."
     },
     {
       "anchor": "finalise-invalid",
@@ -681,6 +721,31 @@
       "message": "The Exelichai App lacks a permission this needs. Accept the App's updated permissions on GitHub."
     },
     {
+      "anchor": "playtest-invalid",
+      "code": "playtest-invalid",
+      "message": "The playtest request could not be read: a step, a pinned cell, an `explain` id, the upload it names or a limit is not allowed. The detail says which."
+    },
+    {
+      "anchor": "playtest-not-savable",
+      "code": "playtest-not-savable",
+      "message": "This playtest cannot be saved as a test: a step ended in a way a test cannot state (refused at commit, a server-only or unsupported transaction, an error, a failed `expect`), or a pinned value cannot be written as an `expect:` line. The detail names the step. Nothing was written."
+    },
+    {
+      "anchor": "playtest-save-failed",
+      "code": "playtest-save-failed",
+      "message": "The test this playtest translates into did not pass when it was run against the same folder, so there is nothing to write. The report names the failing step."
+    },
+    {
+      "anchor": "playtest-too-large",
+      "code": "playtest-too-large",
+      "message": "The playtest's answer is over its size limit, so none of it was sent. Take fewer `look` steps, or split the steps over two playtests."
+    },
+    {
+      "anchor": "playtest-upload-stale",
+      "code": "playtest-upload-stale",
+      "message": "The upload this playtest names can no longer be played: it has expired, belongs to another token, or is not the folder's manifest. Upload the folder again; `exelichai playtest` does this by itself."
+    },
+    {
       "anchor": "pr-closed",
       "code": "pr-closed",
       "message": "The pull request is closed, so its preview was not built."
@@ -728,7 +793,7 @@
     {
       "anchor": "presentation-refused",
       "code": "presentation-refused",
-      "message": "A presentation file failed the import's validation."
+      "message": "A presentation file failed the import's validation. For a frame gate, check for a member id the parent's gate does not have, a whole visible_when cell beside member cells, or a hide that leaves its group empty."
     },
     {
       "anchor": "preview-superseded",
@@ -911,6 +976,11 @@
       "message": "The repository's rules do not work with Studio changes you have not sent yet (a parent pin, a game setting or a pack), so they are not applied yet. Send those changes to GitHub, or discard them in the Studio."
     },
     {
+      "anchor": "rules-not-reproduced",
+      "code": "rules-not-reproduced",
+      "message": "Compiling this game's exported rules did not give back the game: a push of the untouched export would change this entry. Nothing in your files is wrong; the detail names the entry."
+    },
+    {
       "anchor": "rules-packs",
       "code": "rules-packs",
       "message": "Pack pins belong in `exelichai.yaml`, not in a rules file."
@@ -943,7 +1013,7 @@
     {
       "anchor": "scene-key-unknown",
       "code": "scene-key-unknown",
-      "message": "A scene carries a key the scene storage does not keep, so saving it would silently drop that key. Remove it or rename it to a key scenes support."
+      "message": "A scene carries a field the scene storage does not keep, so saving it would silently drop that field. Remove it or rename it to one scenes support."
     },
     {
       "anchor": "seal-not-sealable",

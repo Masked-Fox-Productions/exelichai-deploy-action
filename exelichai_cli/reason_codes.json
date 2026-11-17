@@ -186,6 +186,11 @@
       "message": "This game is larger than your `exelichai` command can download. Upgrade it (`pip install -U exelichai`) and run the command again."
     },
     {
+      "anchor": "clip-schema-superseded",
+      "code": "clip-schema-superseded",
+      "message": "A clip in this push uses an older schema version than the stored clip, so it was refused and nothing was written. Pull to get the clip in its current version, then push again; or update the exelichai CLI."
+    },
+    {
       "anchor": "commit-missing",
       "code": "commit-missing",
       "message": "GitHub has no commit with that id in the repository."
